@@ -133,6 +133,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #vlookup-demo .mini td{min-width:64px}
 #vlookup-demo .mini-side{flex:1;min-width:220px}
 #vlookup-demo .mini-q{font-size:13px;margin-bottom:10px}
+/* 口诀卡 */
+#vlookup-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#vlookup-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#vlookup-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#vlookup-demo .motto-l{font-size:14px;line-height:2}
+#vlookup-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
 @media (prefers-reduced-motion: reduce){
   #vlookup-demo .probe,#vlookup-demo .beam,#vlookup-demo .chipfly,#vlookup-demo .cbadge{display:none}
   #vlookup-demo *{animation:none !important;transition:none !important}
@@ -223,6 +229,13 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
       </div>
     </div>
   </div>
+</div>
+
+<div class="motto">
+  <div class="motto-t">口诀卡</div>
+  <div class="motto-f">=VLOOKUP(找谁, 去哪找, 拿第几列, FALSE)</div>
+  <div class="motto-l">首列圈住查找值，列号从圈里数起；<br>一字不差写 FALSE，找不到查空格文本。</div>
+  <div class="motto-tip">进阶：下拉填充前把区域锁成 $A$2:$C$8，不然区域跟着跑；不想见 #N/A 就包一层 IFERROR(…,"无货")；反向查找是 VLOOKUP 的死穴，交给 INDEX+MATCH 或 XLOOKUP。</div>
 </div>
 
 <p class="sr-only">交互演示：VLOOKUP 以出货单的商品编码为查找值，在价格表首列自上而下逐行比对，命中后返回区域第 3 列的售价；查不到返回 #N/A。下方三个实验分别演示区域起点、列号、匹配方式的选取原理。</p>
