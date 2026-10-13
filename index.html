@@ -22,6 +22,8 @@ a.card:hover{border-color:#217346;box-shadow:0 6px 18px rgba(31,27,18,.08);trans
 .more{margin-top:26px;font-size:13px;color:#6d6759}
 footer{margin-top:40px;padding-top:16px;border-top:1px dashed #ddd6c8;font-size:12.5px;color:#6d6759}
 footer a{color:#217346;text-decoration:none}
+.uvnum{margin:10px 0 0;font-family:Consolas,monospace;font-size:11.5px;color:#a09a8d;letter-spacing:.1em}
+.uvnum:empty{display:none}
 @media (max-width:480px){h1{font-size:24px}}
 </style>
 </head>
@@ -40,6 +42,23 @@ footer a{color:#217346;text-decoration:none}
   </div>
   <p class="more">更多函数排片中：XLOOKUP · IF · SUMIF</p>
   <footer>托管于 GitHub Pages · <a href="https://github.com/benyichan/how-to-excel">源码仓库</a></footer>
+  <p class="uvnum" id="uv-count"></p>
 </div>
+<script>
+/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
+(function(){
+  var el=document.getElementById('uv-count');
+  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
+  var PAGE_ID='tutorials/index';
+  try{
+    var v=localStorage.getItem('h2e_vid');
+    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
+    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
+      .then(function(r){return r.json()})
+      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人访问过'}})
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
