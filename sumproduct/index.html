@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUMPRODUCT 是怎么工作的？——交互演示</title>
+<style>
+:root{color-scheme:light;--foreground:#2b2723;--muted-foreground:#6d6759;--accent:#d97a06}
+body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
+#sumproduct-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px}
+</style>
+</head>
+<body>
+<div id="sumproduct-demo">
+<style>
+#sumproduct-demo{--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;color:var(--foreground);font-size:14px}
+#sumproduct-demo h3{margin:0 0 2px}
+#sumproduct-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+#sumproduct-demo .backlink{color:#6d6759;text-decoration:none}
+#sumproduct-demo .backlink:hover{color:#217346}
+#sumproduct-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
+#sumproduct-demo .uvnum:empty{display:none}
+#sumproduct-demo .sub{margin:0 0 12px;color:var(--muted-foreground);font-size:13.5px;line-height:1.6}
+#sumproduct-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#sumproduct-demo .tabular-nums{font-variant-numeric:tabular-nums}
+
+/* ===== 按钮体系（自包含） ===== */
+#sumproduct-demo .btn-p,#sumproduct-demo .btn-s,#sumproduct-demo .exp-btn{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
+#sumproduct-demo .btn-p{background:#217346;border-color:#217346;color:#fff;margin-right:8px}
+#sumproduct-demo .btn-p:disabled{opacity:.55;cursor:default}
+#sumproduct-demo .btn-s{margin-right:8px}
+#sumproduct-demo .exp-btn{margin:0 8px 8px 0}
+#sumproduct-demo .exp-btn.on{border-color:#217346;box-shadow:inset 0 0 0 1px #217346;background:#f3f9f5;color:#186a3e}
+
+/* ===== Excel 窗口（产品拟真，固定浅色） ===== */
+#sumproduct-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
+#sumproduct-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+#sumproduct-demo .xl-title .save{opacity:.72;font-size:11px}
+#sumproduct-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
+#sumproduct-demo .fx{display:flex;align-items:stretch;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
+#sumproduct-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
+#sumproduct-demo .fx .fxl{width:34px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#a09a8d;font-family:Georgia,serif;font-style:italic}
+#sumproduct-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,'Courier New',monospace;white-space:nowrap;overflow-x:auto}
+#sumproduct-demo .seg{border-radius:4px;padding:1px 6px;margin:0 2px;border:1px solid transparent;font-weight:500}
+#sumproduct-demo .s1{background:#2563eb;color:#fff;border-color:#2563eb}
+#sumproduct-demo .s2{background:#7c3aed;color:#fff;border-color:#7c3aed}
+#sumproduct-demo .s3{background:#d97a06;color:#fff;border-color:#d97a06}
+#sumproduct-demo .seg:hover{filter:brightness(.95)}
+#sumproduct-demo .seg.badseg{background:#fde8e8 !important;color:#c0392b !important}
+#sumproduct-demo .fl{transform-origin:left center}
+#sumproduct-demo .fl.flash{animation:sp-fflash .95s ease}
+@keyframes sp-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01);box-shadow:0 0 0 1px rgba(33,115,70,.5)}}
+
+/* ===== 网格 ===== */
+#sumproduct-demo .grid-scroll{overflow-x:auto;padding:10px}
+#sumproduct-demo .grid-box{position:relative;width:max-content;margin:0 auto}
+#sumproduct-demo table.xlt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+#sumproduct-demo .xlt th,#sumproduct-demo .xlt td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap;transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
+#sumproduct-demo .xlt .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
+#sumproduct-demo .xlt .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
+#sumproduct-demo .xlt td.h{font-weight:500;color:#45413a;background:#faf8f3}
+#sumproduct-demo .xlt td.num{text-align:right}
+#sumproduct-demo td.fcell.sel{box-shadow:inset 0 0 0 2px #217346;background:#f6fbf8}
+#sumproduct-demo td.fcell.err{color:#d13438;font-weight:500}
+#sumproduct-demo td.fcell.wrongcell{color:#b45309;font-weight:500}
+
+/* 参数高亮与运行区域标记 */
+#sumproduct-demo .hl1{background:#e9f0fe !important;box-shadow:inset 0 0 0 2px var(--p1)}
+#sumproduct-demo .hl2{background:#f2ebfd !important;box-shadow:inset 0 0 0 2px var(--p2)}
+#sumproduct-demo .ra1{background:#eef4ff !important}
+#sumproduct-demo .ra2{background:#f6f0ff !important}
+
+/* 动画过程态（短促、事件式） */
+#sumproduct-demo .cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transform:scale(1.07);position:relative;z-index:2;transition:transform .22s cubic-bezier(.3,1.2,.4,1),background-color .25s ease,box-shadow .25s ease}
+#sumproduct-demo .pop{transform:scale(1.24);transition:transform .18s cubic-bezier(.3,1.5,.5,1);box-shadow:0 5px 16px rgba(217,122,6,.35),inset 0 0 0 2px #e8a33d;position:relative;z-index:3}
+#sumproduct-demo .okflash{animation:sp-okflash .8s cubic-bezier(.3,1.4,.5,1);position:relative;z-index:3}
+@keyframes sp-okflash{0%{background:#7fd6a2;transform:scale(1.26);box-shadow:inset 0 0 0 2px #1e9e57,0 4px 14px rgba(30,158,87,.35)}55%{background:#cdeedd;transform:scale(1.04);box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;transform:scale(1);box-shadow:none}}
+#sumproduct-demo .warnflash{animation:sp-warnflash .8s cubic-bezier(.3,1.4,.5,1);position:relative;z-index:3}
+@keyframes sp-warnflash{0%{background:#ffd9a3;transform:scale(1.26);box-shadow:inset 0 0 0 2px #d97a06,0 4px 14px rgba(217,122,6,.35)}55%{background:#ffeeda;transform:scale(1.04);box-shadow:inset 0 0 0 2px #d97a06}100%{background:#fff;transform:scale(1);box-shadow:none}}
+#sumproduct-demo .shake{animation:sp-shake .45s}
+@keyframes sp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+
+/* 覆盖层动画元素：双探针 + 飞行乘积 */
+#sumproduct-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
+#sumproduct-demo .probe{position:absolute;width:16px;height:16px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0}
+#sumproduct-demo .probe.on{opacity:1}
+#sumproduct-demo .probe.pr1{background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);animation:sp-pulse-b 1.5s ease-in-out infinite}
+#sumproduct-demo .probe.pr2{background:radial-gradient(circle at 35% 35%,#c9a6ff,#7c3aed);animation:sp-pulse-p 1.5s ease-in-out infinite}
+#sumproduct-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c);animation-name:sp-pulse-g}
+#sumproduct-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438);animation-name:sp-pulse-r}
+@keyframes sp-pulse-b{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
+@keyframes sp-pulse-p{0%,100%{box-shadow:0 0 0 4px rgba(124,58,237,.16),0 2px 8px rgba(124,58,237,.4)}50%{box-shadow:0 0 0 7px rgba(124,58,237,.08),0 2px 10px rgba(124,58,237,.5)}}
+@keyframes sp-pulse-g{0%,100%{box-shadow:0 0 0 4px rgba(24,138,76,.18),0 2px 8px rgba(24,138,76,.45)}50%{box-shadow:0 0 0 7px rgba(24,138,76,.10),0 2px 10px rgba(24,138,76,.55)}}
+@keyframes sp-pulse-r{0%,100%{box-shadow:0 0 0 4px rgba(209,52,56,.16),0 2px 8px rgba(209,52,56,.4)}50%{box-shadow:0 0 0 7px rgba(209,52,56,.08),0 2px 10px rgba(209,52,56,.5)}}
+#sumproduct-demo .beam{position:absolute;height:3px;border-radius:2px;background:linear-gradient(90deg,#f2b25c,#d97a06);box-shadow:0 0 10px rgba(217,122,6,.7);transform-origin:left center;transform:scaleX(0);z-index:4;transition:transform .38s ease}
+#sumproduct-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
+#sumproduct-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
+
+/* 控制与图例 */
+#sumproduct-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
+#sumproduct-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
+#sumproduct-demo .narr.err{background:#fdecec;border-color:#efc3c3}
+#sumproduct-demo .narr.warn{background:#fdf3e3;border-color:#f0d9ae}
+#sumproduct-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+#sumproduct-demo .narr.ok .dot{background:var(--p4)}
+#sumproduct-demo .narr.err .dot{background:#d13438}
+#sumproduct-demo .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#sumproduct-demo .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid #e2dccd;border-radius:999px;background:#fff;color:var(--foreground);font-size:12.5px;cursor:default}
+#sumproduct-demo .chip[data-p]{cursor:pointer}
+#sumproduct-demo .chip[data-p]:hover{border-color:var(--muted-foreground)}
+#sumproduct-demo .chip .n{width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex:none}
+
+/* ===== 为什么实验区 ===== */
+#sumproduct-demo .why{margin-top:22px;border-top:1px dashed #d8d2c4;padding-top:6px}
+#sumproduct-demo .why-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+#sumproduct-demo .why-head b{font-size:14.5px}
+#sumproduct-demo .why-head .hint{font-size:12.5px;color:var(--muted-foreground)}
+#sumproduct-demo .exp{margin-top:12px;padding:12px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9}
+#sumproduct-demo .exp-t{font-size:13px;line-height:1.55;margin-bottom:10px}
+#sumproduct-demo .exp-t b{color:#186a3e}
+#sumproduct-demo .exp-t .note{color:var(--muted-foreground);font-size:12px}
+#sumproduct-demo .exp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#sumproduct-demo .exp-row .hint{font-size:12.5px;color:var(--muted-foreground)}
+
+/* 口诀卡 */
+#sumproduct-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#sumproduct-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#sumproduct-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#sumproduct-demo .motto-l{font-size:14px;line-height:2}
+#sumproduct-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
+@media (prefers-reduced-motion: reduce){
+  #sumproduct-demo .probe,#sumproduct-demo .chipfly,#sumproduct-demo .beam{display:none}
+  #sumproduct-demo *{animation:none !important;transition:none !important}
+}
+</style>
+
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<h3>SUMPRODUCT 是怎么工作的？</h3>
+<p class="sub" style="margin-bottom:4px"><b>柜台流水只有数量、单价两列，想知道今天一共卖了多少钱。</b>老办法是旁边补一列金额 =B2*C2 拖到底，再对它求和。SUMPRODUCT 把两步并成一步：对应行相乘，乘完就加。</p>
+<p class="sub">蓝点沿着数量列走，紫点沿着单价列走——每配成一行，就往合计格里丢一笔乘积。鼠标悬停公式里的彩色参数段（或下方图例），表里对应的区域会亮</p>
+
+<div class="xl">
+  <div class="xl-title"><span>今日流水.xlsx</span><span class="save">已自动保存</span></div>
+  <div class="xl-ribbon">开始　插入　公式　数据　审阅</div>
+  <div class="fx">
+    <span class="name" id="sp-namebox">C8</span>
+    <span class="fxl">fx</span>
+    <div class="fl">=SUMPRODUCT(<span class="seg s1" id="sp-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span><span>, </span><span class="seg s2" id="sp-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C2:C6</span><span>)</span></div>
+  </div>
+  <div class="grid-scroll">
+    <div class="grid-box" id="sp-gbox">
+      <table class="xlt" id="sp-xlt"></table>
+      <div class="ovl" id="sp-ovl">
+        <div class="beam" id="sp-beam"></div>
+        <div class="probe pr1" id="sp-probe1"></div>
+        <div class="probe pr2" id="sp-probe2"></div>
+        <div class="chipfly" id="sp-chipfly"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="viz-row" style="margin-top:12px">
+  <button id="sp-play" class="btn-p" type="button" title="从头重放整段计算">▶ 播放</button>
+  <button id="sp-step" class="btn-s" type="button" title="一步一步看它怎么乘怎么加">≫ 单步</button>
+  <span class="narr" aria-live="polite"><span class="dot"></span><span id="sp-narrtx">准备就绪——点「播放」，看它一行一行乘上去</span></span>
+</div>
+
+<div class="legend">
+  <button class="chip" data-p="1" type="button"><span class="n" style="background:var(--p1)">1</span>数量列 · 第 1 参数</button>
+  <button class="chip" data-p="2" type="button"><span class="n" style="background:var(--p2)">2</span>单价列 · 第 2 参数</button>
+  <span class="chip"><span class="n" style="background:var(--p3)">×</span>每行乘积 · 飞进合计格</span>
+  <span class="chip"><span class="n" style="background:var(--p4)">=</span>合计 · 乘完就加</span>
+</div>
+
+<div class="why">
+  <div class="why-head">
+    <div><b>为什么这么填？</b><span class="hint">　参数不用背——故意改错，看它翻车，why 自然就懂</span></div>
+    <button id="sp-reset" class="btn-s" type="button">还原默认公式</button>
+  </div>
+
+  <div class="exp">
+    <div class="exp-t"><b>实验一 · 两块区域要对齐</b>　第 1 参数的第 1 行，永远配第 2 参数的第 1 行。起点差一行，它照样往下算，一声不吭给你个错数。<span class="note">（表格中间插过行、两列分开框选时最容易中招）</span></div>
+    <div class="exp-row">
+      <button class="exp-btn t-ok" data-tier="ok" type="button" aria-pressed="true">C2 起 · 对齐（正确）</button>
+      <button class="exp-btn t-shift" data-tier="shift" type="button" aria-pressed="false">单价从 C3 取 · 错位一行</button>
+      <span class="hint">选一档，动画会按新公式重放</span>
+    </div>
+  </div>
+
+  <div class="exp">
+    <div class="exp-t"><b>实验二 · 两块区域要一样长</b>　一边 5 行一边 4 行，多出来的数量没有单价可配，它直接罢工。<span class="note">（新数据只往一列里补、另一列忘了拉区域，就会这样）</span></div>
+    <div class="exp-row">
+      <button class="exp-btn t-ok2" data-tier="ok" type="button" aria-pressed="true">一样长 C2:C6（正确）</button>
+      <button class="exp-btn t-short" data-tier="short" type="button" aria-pressed="false">单价少一行 C2:C5</button>
+    </div>
+  </div>
+
+  <div class="exp">
+    <div class="exp-t"><b>实验三 · 文字会被当 0</b>　区域里混进文字，SUMPRODUCT 不报错，把它按 0 参与运算——结果悄悄变小。<span class="note">（「面议」「待定」「暂无」都是这种雷。这是逗号写法的脾气——切到实验四的乘号写法，它会当场翻车）</span></div>
+    <div class="exp-row">
+      <button class="exp-btn t-ok3" data-tier="ok" type="button" aria-pressed="true">单价全是数字（正确）</button>
+      <button class="exp-btn t-text" data-tier="text" type="button" aria-pressed="false">马克杯单价填「面议」</button>
+    </div>
+  </div>
+
+  <div class="exp">
+    <div class="exp-t"><b>实验四 · 逗号还是乘号？</b>　B2:B6*C2:C6 这种乘号写法同样成立：先把两列逐行相乘成一列乘积，SUMPRODUCT 只管把乘积加总，两种写法数值一分不差。差别在脏数据——逗号把文字当 0 偷偷放行，乘号直接 #VALUE!。</div>
+    <div class="exp-row">
+      <button class="exp-btn f-comma" data-form="comma" type="button" aria-pressed="true">逗号写法 SUMPRODUCT(B2:B6, C2:C6)</button>
+      <button class="exp-btn f-star" data-form="star" type="button" aria-pressed="false">乘号写法 SUMPRODUCT(B2:B6*C2:C6)</button>
+      <span class="hint">切到乘号写法，再把实验三点成「面议」，看两种写法对文字的不同态度</span>
+    </div>
+  </div>
+</div>
+
+<div class="motto">
+  <div class="motto-t">口诀卡</div>
+  <div class="motto-f">=SUMPRODUCT(数量列, 单价列)</div>
+  <div class="motto-l">两块区域一样长，头对头一行行配；<br>乘完顺手全加总，文字空格当 0 算。</div>
+  <div class="motto-tip">进阶：把条件写成 (A2:A6="保温杯")、用乘号乘上金额那一列，同一格公式就能按条件合计——乘号写法的主场。SUMPRODUCT 直接吃数组表达式，不需要 Ctrl+Shift+Enter。</div>
+</div>
+
+<p class="sr-only">交互演示：SUMPRODUCT 取数量列与单价列两个区域，逐行对应相乘，再把乘积求和写入 C8。四个实验分别演示：区域错位一行导致静默算错、两区域行数不等报 #VALUE!、区域里的文字被当 0 导致漏算、逗号写法与乘号写法（数组相乘）的差异——乘号写法遇文字直接 #VALUE!。</p>
+</div>
+
+<script>
+(function(){
+const R=document.getElementById('sumproduct-demo');
+const GOODS=[["保温杯",12,45],["雨伞",8,32],["一次性纸杯",30,3],["马克杯",6,25],["保温袋",15,18]];
+const N=GOODS.length,TXT_I=3; // TXT_I：马克杯（行 5），实验三把它单价换成文字
+const TIERS={
+  ok:   {off:0,plen:5,txt:false},
+  shift:{off:1,plen:5,txt:false},
+  short:{off:0,plen:4,txt:false},
+  text: {off:0,plen:5,txt:true}
+};
+
+let reduced=false;try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+let tier='ok',form='comma',token=0,steps=[],stepIdx=0,running=false,idleTimer=0;
+
+/* ---- 建表：A 商品 / B 数量 / C 单价，行 7 留空，行 8 合计 ---- */
+const W=[26,96,72,78];
+let h='<colgroup>'+W.map(w=>'<col style="width:'+w+'px">').join('')+'</colgroup><tbody>';
+h+='<tr><th class="rh"></th><th class="ch" data-c="A">A</th><th class="ch" data-c="B">B</th><th class="ch" data-c="C">C</th></tr>';
+h+='<tr><th class="rh">1</th><td class="h">商品</td><td class="h">数量(件)</td><td class="h">单价(元)</td></tr>';
+for(let r=2;r<=6;r++){
+  const g=GOODS[r-2];
+  h+='<tr><th class="rh">'+r+'</th><td data-a="A'+r+'">'+g[0]+'</td><td class="tabular-nums num" data-a="B'+r+'">'+g[1]+'</td><td class="tabular-nums num" data-a="C'+r+'">'+g[2]+'</td></tr>';
+}
+h+='<tr><th class="rh">7</th><td data-a="A7"></td><td data-a="B7"></td><td data-a="C7"></td></tr>';
+h+='<tr><th class="rh">8</th><td class="h" colspan="2">今日合计(元)</td><td class="tabular-nums fcell num" data-a="C8"></td></tr>';
+h+='</tbody>';
+R.querySelector('#sp-xlt').innerHTML=h;
+
+const cel={};R.querySelectorAll('[data-a]').forEach(el=>{cel[el.dataset.a]=el});
+const gbox=R.querySelector('#sp-gbox'),p1=R.querySelector('#sp-probe1'),p2=R.querySelector('#sp-probe2'),chipfly=R.querySelector('#sp-chipfly'),beam=R.querySelector('#sp-beam');
+const namebox=R.querySelector('#sp-namebox');
+let sg1=null,sg2=null; // 公式段随写法切换重建，由 syncFormula 重新抓取
+const narrEl=R.querySelector('#sp-narrtx'),narrWrap=narrEl.parentElement;
+const playBtn=R.querySelector('#sp-play'),stepBtn=R.querySelector('#sp-step');
+const fcell=cel['C8'];
+
+function pos(el){const r=el.getBoundingClientRect(),b=gbox.getBoundingClientRect();return{l:r.left-b.left,t:r.top-b.top,w:r.width,cx:r.left-b.left+r.width/2,cy:r.top-b.top+r.height/2}}
+function narr(tx,mode){narrEl.textContent=tx;narrWrap.classList.remove('ok','err','warn');if(mode)narrWrap.classList.add(mode)}
+const sleep=(ms,my)=>new Promise((res,rej)=>setTimeout(()=>{my!==undefined&&my!==token?rej(0):res()},ms));
+function probeTo(pr,el){const p=pos(el);pr.style.left=p.cx+'px';pr.style.top=p.cy+'px';pr.classList.add('on')}
+function probesOff(){p1.classList.remove('on','good','bad');p2.classList.remove('on','good','bad')}
+/* 配对光束：从数量格中心射向单价格中心（错位档天然是斜箭头） */
+function beamShow(aEl,bEl,my){return new Promise((res,rej)=>{
+  const a=pos(aEl),b=pos(bEl),dx=b.cx-a.cx,dy=b.cy-a.cy;
+  beam.style.transition='none';
+  beam.style.left=a.cx+'px';beam.style.top=a.cy+'px';
+  beam.style.width=Math.max(Math.hypot(dx,dy)-6,8)+'px';
+  beam.style.transform='rotate('+Math.atan2(dy,dx)+'rad) scaleX(0)';
+  beam.offsetHeight;
+  beam.style.transition='transform .38s ease';
+  beam.style.transform='rotate('+Math.atan2(dy,dx)+'rad) scaleX(1)';
+  setTimeout(()=>{my!==undefined&&my!==token?rej(0):res()},400);
+})}
+function beamHide(){beam.style.transition='none';beam.style.transform='scaleX(0)'}
+
+/* 乘积 chip：从配对两格的中点起飞，落进合计格 */
+function flyProd(aEl,bEl,txt,my){return new Promise((res,rej)=>{
+  const a=pos(aEl),b=pos(bEl),t=pos(fcell);
+  chipfly.textContent=txt;
+  chipfly.style.transition='none';
+  chipfly.style.left=((a.cx+b.cx)/2)+'px';
+  chipfly.style.top=((a.cy+b.cy)/2)+'px';
+  chipfly.classList.add('on');chipfly.offsetHeight;chipfly.style.transition='';
+  requestAnimationFrame(()=>{chipfly.style.left=t.cx+'px';chipfly.style.top=t.cy+'px'});
+  setTimeout(()=>{my!==undefined&&my!==token?rej(0):(chipfly.classList.remove('on'),res())},580);
+})}
+/* 合计格数字滚动累加 */
+function rollTo(from,to,my){return new Promise(res=>{
+  const t0=performance.now(),ms=320;
+  function fr(now){
+    if(my!==undefined&&my!==token){res();return}
+    const k=Math.min(1,(now-t0)/ms),e=1-Math.pow(1-k,3);
+    fcell.textContent=String(Math.round(from+(to-from)*e));
+    if(k<1)requestAnimationFrame(fr);else{fcell.textContent=String(to);res()}
+  }
+  requestAnimationFrame(fr);
+})}
+
+/* ---- 公式与数据联动（写法切换整体重建公式栏） ---- */
+function priceTop(){return 2+TIERS[tier].off}
+function priceEnd(){return priceTop()+TIERS[tier].plen-1}
+function syncFormula(){
+  const fl=R.querySelector('.fx .fl');
+  let h='=SUMPRODUCT(<span class="seg s1" id="sp-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span>';
+  h+=form==='star'
+    ?'<span class="seg s3" data-p="3" style="background:#d97a06;color:#fff;border:1px solid #d97a06;font-weight:500" title="乘号：先把两列逐行相乘成一个新数组；文字遇乘号直接 #VALUE!">*</span>'
+    :'<span>, </span>';
+  h+='<span class="seg s2" id="sp-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C'+priceTop()+':C'+priceEnd()+'</span><span>)</span>';
+  fl.innerHTML=h;
+  sg1=R.querySelector('#sp-sg1');sg2=R.querySelector('#sp-sg2');
+  sg2.classList.toggle('badseg',tier==='shift'||tier==='short');
+  bindFx();
+  const c5=cel['C5'];
+  if(TIERS[tier].txt){c5.textContent='面议';c5.classList.remove('num')}
+  else{c5.textContent='25';c5.classList.add('num')}
+}
+function bindFx(){
+  R.querySelectorAll('.fx .fl [data-p]').forEach(el=>{
+    const p=el.dataset.p;
+    el.addEventListener('pointerenter',()=>setHL(p));
+    el.addEventListener('pointerleave',()=>setHL(0));
+    el.addEventListener('click',()=>setHL(p));
+    el.addEventListener('focus',()=>setHL(p));
+    el.addEventListener('blur',()=>setHL(0));
+  });
+}
+
+/* 结果单一来源：预填 / 单步 / 动画收尾共用这一份 */
+function computeAll(){
+  const t=TIERS[tier];
+  if(t.plen!==N)return{err:'VALUE',why:'short'};
+  const rows=[];let total=0;
+  for(let i=0;i<N;i++){
+    const g=GOODS[i],qr=2+i,src=i+t.off,pr=2+src; // src：配对单价在 GOOD 系列里的下标
+    let disp,num,kind='num',owner='';
+    if(src>=N){disp='';num=0;kind='blank'}
+    else if(t.txt&&src===TXT_I){disp='面议';num=0;kind='text';owner=GOODS[src][0]}
+    else{num=GOODS[src][2];disp=String(num);owner=GOODS[src][0]}
+    const prod=g[1]*num;total+=prod;
+    rows.push({qr,pr,name:g[0],qty:g[1],disp,kind,prod,owner,blank:kind==='blank'});
+  }
+  // 乘号写法：文字 × 数字在数组相乘阶段就翻 #VALUE!，轮不到 SUMPRODUCT 把它当 0
+  if(form==='star'&&t.txt)return{err:'VALUE',why:'star-text',rows};
+  return{total,rows};
+}
+
+/* ---- 参数高亮联动（公式段 ↔ 表格区域） ---- */
+function hlClear(){R.querySelectorAll('.hl1,.hl2').forEach(el=>el.classList.remove('hl1','hl2'))}
+function setHL(p){
+  hlClear();if(!p)return;
+  if(p==='1'){for(let r=2;r<=6;r++)cel['B'+r].classList.add('hl1')}
+  else if(p==='2'){for(let r=priceTop();r<=priceEnd();r++)cel['C'+r].classList.add('hl2')}
+  else{for(let r=2;r<=6;r++)cel['B'+r].classList.add('hl1');for(let r=priceTop();r<=priceEnd();r++)cel['C'+r].classList.add('hl2')}
+}
+R.querySelectorAll('.legend [data-p]').forEach(el=>{
+  const p=el.dataset.p;
+  el.addEventListener('pointerenter',()=>setHL(p));
+  el.addEventListener('pointerleave',()=>setHL(0));
+  el.addEventListener('click',()=>setHL(p));
+  el.addEventListener('focus',()=>setHL(p));
+  el.addEventListener('blur',()=>setHL(0));
+});
+
+/* ---- 动画步骤引擎：步骤序列 = SUMPRODUCT 的真实执行顺序 ---- */
+function rangeMark(on){
+  for(let r=2;r<=6;r++)cel['B'+r].classList.toggle('ra1',on);
+  for(let r=priceTop();r<=priceEnd();r++)cel['C'+r].classList.toggle('ra2',on);
+}
+function rowStep(rw,prev,nxt){
+  return async my=>{
+    const qc=cel['B'+rw.qr],pc=cel['C'+rw.pr];
+    if(rw.blank)narr(rw.name+'的 '+rw.qty+'，配到下面的空格子——空格子当 0，这行白乘');
+    else if(rw.kind==='text')narr(rw.name+'的单价是文字「面议」——不报错，当 0 参与运算，这 150 悄悄丢了');
+    else if(tier==='shift')narr(rw.name+'的 '+rw.qty+'，配到的是下一行'+rw.owner+'的单价 '+rw.disp+'——错开了');
+    else narr(rw.name+'：'+rw.qty+' × '+rw.disp+' = '+rw.prod+'，加到 '+nxt);
+    probeTo(p1,qc);probeTo(p2,pc);
+    qc.classList.add('cmp');pc.classList.add('cmp');
+    await sleep(420,my);
+    await beamShow(qc,pc,my);
+    qc.classList.add('pop');pc.classList.add('pop');
+    await flyProd(qc,pc,'+'+rw.prod,my);
+    await rollTo(prev,nxt,my);
+    qc.classList.remove('cmp','pop');pc.classList.remove('cmp','pop');
+    beamHide();
+    await sleep(130,my);
+  };
+}
+function introStep(res){
+  return async my=>{
+    rangeMark(true);probeTo(p1,cel['B'+res.rows[0].qr]);probeTo(p2,cel['C'+res.rows[0].pr]);
+    narr(form==='star'
+      ?'乘号把两列逐行相乘成一列乘积——SUMPRODUCT 只管把乘积加总'
+      :'\u2460 数量列 B2:B6，\u2461 单价列 '+sg2.textContent+'——按行配对，每行相乘');
+    await sleep(1150,my);
+  };
+}
+function buildSteps(){
+  const st=[],res=computeAll(),flEl=R.querySelector('.fx .fl');
+  st.push(async my=>{flEl.classList.remove('flash');void flEl.offsetWidth;flEl.classList.add('flash');narr('先看一眼公式本身——接下来的动画就是它在执行');await sleep(1000,my);flEl.classList.remove('flash')});
+  if(res.err==='VALUE'&&res.why==='short'){
+    st.push(async my=>{
+      rangeMark(true);probeTo(p1,cel['B2']);probeTo(p2,cel['C2']);
+      narr('数量列 B2:B6 有 5 行，单价列 '+sg2.textContent+' 只有 4 行——SUMPRODUCT 先数人头');
+      await sleep(1300,my);
+    });
+    st.push(async my=>{
+      p1.classList.add('bad');p2.classList.add('bad');await sleep(450,my);
+      gbox.classList.add('shake');fcell.textContent='#VALUE!';fcell.classList.add('err');
+      narr('#VALUE!：第 5 行的 15 找不到单价跟它配。两块区域行数必须相等','err');
+      await sleep(750,my);gbox.classList.remove('shake');probesOff();
+    });
+    return st;
+  }
+  if(res.err==='VALUE'&&res.why==='star-text'){
+    // 乘号写法：数组相乘到文字那行当场翻 #VALUE!，前面的行照常乘
+    st.push(introStep(res));
+    let acc=0;
+    for(let i=0;i<TXT_I;i++){const rw=res.rows[i],prev=acc,nxt=acc+rw.prod;acc=nxt;st.push(rowStep(rw,prev,nxt))}
+    st.push(async my=>{
+      const rw=res.rows[TXT_I],qc=cel['B'+rw.qr],pc=cel['C'+rw.pr];
+      narr('马克杯：6 × 「面议」——文字乘不出数');
+      probeTo(p1,qc);probeTo(p2,pc);
+      qc.classList.add('cmp');pc.classList.add('cmp');
+      await sleep(650,my);
+      p1.classList.add('bad');p2.classList.add('bad');await sleep(350,my);
+      gbox.classList.add('shake');fcell.textContent='#VALUE!';fcell.classList.add('err');
+      narr('#VALUE!：乘号不把文字当 0，直接翻车——脏数据用乘号写法反而炸得明白','err');
+      await sleep(800,my);gbox.classList.remove('shake');probesOff();
+      qc.classList.remove('cmp');pc.classList.remove('cmp');
+    });
+    return st;
+  }
+  st.push(introStep(res));
+  let acc=0;
+  res.rows.forEach(rw=>{const prev=acc,nxt=acc+rw.prod;acc=nxt;st.push(rowStep(rw,prev,nxt))});
+  st.push(async my=>{
+    if(tier==='ok'){
+      p1.classList.add('good');p2.classList.add('good');await sleep(320,my);
+      fcell.classList.add('okflash');
+      narr(form==='star'
+        ?'五行乘完，把乘积列加总：'+res.total+' 元——和逗号写法一分不差'
+        :'五行乘完加完：合计 '+res.total+' 元。不用补金额列，一格公式收工','ok');
+      probesOff();await sleep(850,my);
+    }else if(tier==='shift'){
+      fcell.classList.add('warnflash');fcell.classList.add('wrongcell');
+      narr('结果 '+res.total+'，比真实的 1306 少 40——它只管「第 1 个配第 1 个」，不会替你对齐','warn');
+      probesOff();await sleep(900,my);
+    }else{
+      fcell.classList.add('warnflash');fcell.classList.add('wrongcell');
+      narr('结果 '+res.total+'，比 1306 少 150——少的正是马克杯。文字混进数字列，它悄悄当 0','warn');
+      probesOff();await sleep(900,my);
+    }
+  });
+  return st;
+}
+function clearTransient(){
+  R.querySelectorAll('.cmp,.pop').forEach(el=>el.classList.remove('cmp','pop'));
+  chipfly.classList.remove('on');gbox.classList.remove('shake');beamHide();
+  const ff=R.querySelector('.fl.flash');if(ff)ff.classList.remove('flash');
+}
+function clearRunState(){
+  clearTransient();rangeMark(false);probesOff();
+  fcell.textContent='';fcell.classList.remove('err','okflash','warnflash','wrongcell');
+}
+function resetAndRun(){
+  clearTimeout(idleTimer);token++;clearRunState();
+  steps=buildSteps();stepIdx=0;runLoop();
+}
+function runLoop(){
+  const my=++token;running=true;playBtn.disabled=true;
+  (async()=>{try{while(stepIdx<steps.length){await steps[stepIdx++](my)}}
+  catch(e){if(e!==0)console.error(e)}
+  finally{if(my===token){running=false;playBtn.disabled=false;if(stepIdx>=steps.length)scheduleAutoReset()}}})();
+}
+playBtn.addEventListener('click',resetAndRun);
+stepBtn.addEventListener('click',()=>{
+  clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false}
+  if(stepIdx>=steps.length){clearRunState();steps=buildSteps();stepIdx=0}
+  clearTransient();
+  const my=++token;
+  (async()=>{try{await steps[stepIdx++](my)}catch(e){if(e!==0)console.error(e)}})();
+});
+
+/* ---- 实验档位与写法切换：档位切档其他参数归位；写法是独立旋钮，跨档保留 ---- */
+function setTierButtons(){
+  R.querySelectorAll('.exp-btn[data-tier]').forEach(b=>{
+    const on=b.dataset.tier===tier;
+    b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+function setFormButtons(){
+  R.querySelectorAll('.exp-btn[data-form]').forEach(b=>{
+    const on=b.dataset.form===form;
+    b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+function stopAndClear(){
+  clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false}
+  token++;clearRunState();
+}
+function replay(){if(reduced){steps=[];stepIdx=0;instantRun()}else{resetAndRun()}}
+function setTier(t){stopAndClear();tier=t;setTierButtons();syncFormula();replay()}
+R.querySelectorAll('.exp-btn[data-tier]').forEach(btn=>btn.addEventListener('click',()=>setTier(btn.dataset.tier)));
+R.querySelectorAll('.exp-btn[data-form]').forEach(btn=>btn.addEventListener('click',()=>{
+  if(btn.dataset.form===form)return;
+  stopAndClear();form=btn.dataset.form;setFormButtons();syncFormula();replay();
+}));
+R.querySelector('#sp-reset').addEventListener('click',()=>{
+  stopAndClear();tier='ok';form='comma';
+  setTierButtons();setFormButtons();syncFormula();
+  narr('已还原为 =SUMPRODUCT(B2:B6, C2:C6)');
+});
+
+/* ---- 还原与自动收尾 ---- */
+function instantRun(){
+  clearTimeout(idleTimer);
+  const res=computeAll();
+  if(res.err){
+    fcell.textContent='#VALUE!';fcell.classList.add('err');
+    narr(res.why==='star-text'
+      ?'#VALUE!：乘号写法遇「面议」直接翻车（逗号写法会把文字当 0）'
+      :'#VALUE!：两块区域行数不相等','err');
+  }
+  else if(tier==='ok'){fcell.textContent=String(res.total);narr('✓ 合计 '+res.total+' 元（已开启减少动效，直接给结果）','ok')}
+  else{fcell.textContent=String(res.total);fcell.classList.add('wrongcell');narr('结果 '+res.total+'，数字不对——上面的实验卡写明原因','warn')}
+  scheduleAutoReset();
+}
+function scheduleAutoReset(){
+  clearTimeout(idleTimer);
+  idleTimer=setTimeout(()=>{
+    if(running)return;
+    token++;clearRunState();narr('已自动还原——点「播放」再来一遍，或到下面换个翻车实验');
+  },10000);
+}
+
+/* ---- 初始 ---- */
+syncFormula();setTierButtons();setFormButtons();
+if(reduced){instantRun()}
+else{const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)}
+})();
+</script>
+<script>
+/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
+(function(){
+  var el=document.getElementById('uv-count');
+  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
+  var PAGE_ID='tutorials/sumproduct';
+  try{
+    var v=localStorage.getItem('h2e_vid');
+    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
+    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
+      .then(function(r){return r.json()})
+      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
