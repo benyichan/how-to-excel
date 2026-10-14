@@ -128,10 +128,6 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #sumproduct-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
 #sumproduct-demo .motto-l{font-size:14px;line-height:2}
 #sumproduct-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
-@media (prefers-reduced-motion: reduce){
-  #sumproduct-demo .probe,#sumproduct-demo .chipfly,#sumproduct-demo .beam{display:none}
-  #sumproduct-demo *{animation:none !important;transition:none !important}
-}
 </style>
 
 <div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
@@ -236,7 +232,6 @@ const TIERS={
   text: {off:0,plen:5,txt:true}
 };
 
-let reduced=false;try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
 let tier='ok',form='comma',token=0,steps=[],stepIdx=0,running=false,idleTimer=0;
 
 /* ---- 建表：A 商品 / B 数量 / C 单价，行 7 留空，行 8 合计 ---- */
@@ -507,7 +502,7 @@ function stopAndClear(){
   if(running){token++;running=false;playBtn.disabled=false}
   token++;clearRunState();
 }
-function replay(){if(reduced){steps=[];stepIdx=0;instantRun()}else{resetAndRun()}}
+function replay(){resetAndRun()}
 function setTier(t){stopAndClear();tier=t;setTierButtons();syncFormula();replay()}
 R.querySelectorAll('.exp-btn[data-tier]').forEach(btn=>btn.addEventListener('click',()=>setTier(btn.dataset.tier)));
 R.querySelectorAll('.exp-btn[data-form]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -544,8 +539,7 @@ function scheduleAutoReset(){
 
 /* ---- 初始 ---- */
 syncFormula();setTierButtons();setFormButtons();
-if(reduced){instantRun()}
-else{const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)}
+const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
 })();
 </script>
 <script>
