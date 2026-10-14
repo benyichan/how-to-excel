@@ -76,14 +76,14 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #vlookup-demo .hl4{background:#e6f6ec !important;box-shadow:inset 0 0 0 2px var(--p4)}
 
 /* 动画过程态（短促、只在事件瞬间出现，不喧宾夺主） */
-#vlookup-demo .cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transform:scale(1.07);position:relative;z-index:2;transition:transform .22s cubic-bezier(.3,1.2,.4,1),background-color .25s ease,box-shadow .25s ease}
+#vlookup-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
 #vlookup-demo .dimc{background:#f7f5ef !important;color:#b3ab9c}
-#vlookup-demo .hitmark{background:#a9e4bd !important;box-shadow:inset 0 0 0 2px #2f9e5f;animation:vl-hitpop .38s cubic-bezier(.3,1.6,.5,1);position:relative;z-index:2}
-@keyframes vl-hitpop{0%{transform:scale(1)}55%{transform:scale(1.16)}100%{transform:scale(1)}}
+#vlookup-demo .xlt td.hitmark{background:#a9e4bd !important;box-shadow:inset 0 0 0 2px #2f9e5f;animation:vl-hitpop .38s ease}
+@keyframes vl-hitpop{0%,100%{box-shadow:inset 0 0 0 2px #2f9e5f}55%{box-shadow:inset 0 0 0 3px #188a4c}}
 #vlookup-demo tr.hit td{background:#e4f6ea}
-#vlookup-demo .pop{transform:scale(1.24);transition:transform .18s cubic-bezier(.3,1.5,.5,1);box-shadow:0 5px 16px rgba(217,122,6,.35),inset 0 0 0 2px #e8a33d;position:relative;z-index:3}
-#vlookup-demo .okflash{animation:vl-okflash .8s cubic-bezier(.3,1.4,.5,1);position:relative;z-index:3}
-@keyframes vl-okflash{0%{background:#7fd6a2;transform:scale(1.26);box-shadow:inset 0 0 0 2px #1e9e57,0 4px 14px rgba(30,158,87,.35)}55%{background:#cdeedd;transform:scale(1.04);box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;transform:scale(1);box-shadow:inset 0 0 0 0 rgba(30,158,87,0)}}
+#vlookup-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
+#vlookup-demo .xlt td.okflash{animation:vl-okflash .8s cubic-bezier(.3,1.4,.5,1)}
+@keyframes vl-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:inset 0 0 0 0 rgba(30,158,87,0)}}
 #vlookup-demo .shake{animation:vl-shake .45s}
 @keyframes vl-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 
