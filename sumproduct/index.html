@@ -71,12 +71,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #sumproduct-demo .ra2{background:#f6f0ff !important}
 
 /* 动画过程态（短促、事件式） */
-#sumproduct-demo .cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transform:scale(1.07);position:relative;z-index:2;transition:transform .22s cubic-bezier(.3,1.2,.4,1),background-color .25s ease,box-shadow .25s ease}
-#sumproduct-demo .pop{transform:scale(1.24);transition:transform .18s cubic-bezier(.3,1.5,.5,1);box-shadow:0 5px 16px rgba(217,122,6,.35),inset 0 0 0 2px #e8a33d;position:relative;z-index:3}
-#sumproduct-demo .okflash{animation:sp-okflash .8s cubic-bezier(.3,1.4,.5,1);position:relative;z-index:3}
-@keyframes sp-okflash{0%{background:#7fd6a2;transform:scale(1.26);box-shadow:inset 0 0 0 2px #1e9e57,0 4px 14px rgba(30,158,87,.35)}55%{background:#cdeedd;transform:scale(1.04);box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;transform:scale(1);box-shadow:none}}
-#sumproduct-demo .warnflash{animation:sp-warnflash .8s cubic-bezier(.3,1.4,.5,1);position:relative;z-index:3}
-@keyframes sp-warnflash{0%{background:#ffd9a3;transform:scale(1.26);box-shadow:inset 0 0 0 2px #d97a06,0 4px 14px rgba(217,122,6,.35)}55%{background:#ffeeda;transform:scale(1.04);box-shadow:inset 0 0 0 2px #d97a06}100%{background:#fff;transform:scale(1);box-shadow:none}}
+#sumproduct-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
+#sumproduct-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
+#sumproduct-demo .xlt td.okflash{animation:sp-okflash .8s cubic-bezier(.3,1.4,.5,1)}
+@keyframes sp-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:none}}
+#sumproduct-demo .xlt td.warnflash{animation:sp-warnflash .8s cubic-bezier(.3,1.4,.5,1)}
+@keyframes sp-warnflash{0%{background:#ffd9a3;box-shadow:inset 0 0 0 3px #d97a06}55%{background:#ffeeda;box-shadow:inset 0 0 0 2px #d97a06}100%{background:#fff;box-shadow:none}}
 #sumproduct-demo .shake{animation:sp-shake .45s}
 @keyframes sp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 
