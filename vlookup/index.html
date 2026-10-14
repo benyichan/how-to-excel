@@ -139,10 +139,6 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #vlookup-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
 #vlookup-demo .motto-l{font-size:14px;line-height:2}
 #vlookup-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
-@media (prefers-reduced-motion: reduce){
-  #vlookup-demo .probe,#vlookup-demo .beam,#vlookup-demo .chipfly,#vlookup-demo .cbadge{display:none}
-  #vlookup-demo *{animation:none !important;transition:none !important}
-}
 </style>
 
 <div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
@@ -249,7 +245,6 @@ const ORDERS=["SKU-1003","SKU-1001","SKU-9999","SKU-1007"]; // 行 2~5
 const fmt=p=>p.toFixed(1);
 const INDEX={};PRICE.forEach(d=>{INDEX[d[0]]={code:d[0],name:d[1],price:d[2]}});
 
-let reduced=false;try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
 let activeRow=2;
 
 /* ---- 建表：同一行里，左边是价格表(A:C)，右边是出货单(E:F) ---- */
@@ -406,13 +401,13 @@ function setActive(row,autorun){
   R.querySelectorAll('td.selE').forEach(td=>td.classList.remove('selE'));cel['E'+row].classList.add('selE');
   hlClear();token++;clearTransient();syncFormula();
   if(autorun===false)return;
-  if(reduced){running=false;playBtn.disabled=false;steps=[];stepIdx=0;instantRun(row)}else{resetAndRun()}
+  resetAndRun()
 }
 for(let r=2;r<=5;r++){
   cel['E'+r].addEventListener('click',()=>setActive(r));
   cel['F'+r].addEventListener('click',()=>setActive(r));
 }
-function refreshParams(){token++;hlClear();clearTransient();clearAllF();prefill();syncFormula();if(reduced){running=false;playBtn.disabled=false;steps=[];stepIdx=0;instantRun(activeRow)}else{resetAndRun()}}
+function refreshParams(){token++;hlClear();clearTransient();clearAllF();prefill();syncFormula();resetAndRun()}
 R.querySelectorAll('.exp-btn[data-rs]').forEach(btn=>{
   btn.addEventListener('click',()=>{
     R.querySelectorAll('.exp-btn[data-rs]').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed',b===btn?'true':'false')});
@@ -467,7 +462,7 @@ R.querySelector('#vl-mtrue').addEventListener('click',async()=>{
 syncFormula();
 prefill();
 setActive(2,false);
-if(reduced){instantRun(2)}else{const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)}
+const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
 })();
 </script>
 <script>
