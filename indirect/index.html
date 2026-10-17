@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INDIRECT 是怎么工作的？</title>
+<style>
+:root{color-scheme:light;--foreground:#2b2723;--muted-foreground:#6d6759;--accent:#d97a06}
+body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
+#fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px;color:var(--foreground);font-size:14px;--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;--frame-inset:2px}
+#fn-demo h3{margin:0 0 2px}
+#fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+#fn-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
+#fn-demo .uvnum:empty{display:none}
+#fn-demo .backlink{color:#6d6759;text-decoration:none}
+#fn-demo .backlink:hover{color:#217346}
+#fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground);line-height:1.65}
+/* Excel 拟真窗口（内部固定浅色） */
+#fn-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
+#fn-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between}
+#fn-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
+#fn-demo .fx{display:flex;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
+#fn-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
+#fn-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,monospace;white-space:nowrap;overflow-x:auto;transform-origin:left center}
+#fn-demo .fl.flash{animation:fd-fflash .95s ease}
+@keyframes fd-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01)}}
+/* 公式段：短公式统一实色底白字（skill 视觉规格） */
+#fn-demo .seg{border-radius:3px;padding:1px 4px;font-weight:700;white-space:nowrap;margin:0 1px}
+#fn-demo .seg.s1{background:#2563eb;color:#fff}
+#fn-demo .seg.s2{background:#7c3aed;color:#fff}
+#fn-demo .seg.s3{background:#d97a06;color:#fff}
+#fn-demo .seg.s4{background:#188a4c;color:#fff}
+#fn-demo .legend{font-size:11.5px;color:#6f6a5e;padding:5px 12px;border-bottom:1px solid #efe9dc;background:#fbfaf7;display:flex;gap:12px;flex-wrap:wrap}
+#fn-demo .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+/* 网格：左汇总表 + 右月度表 */
+#fn-demo .grid-scroll{overflow-x:auto;padding:10px 10px 4px}
+#fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
+#fn-demo table.xlt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+#fn-demo .xlt th,#fn-demo .xlt td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap;transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
+#fn-demo .xlt .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
+#fn-demo .xlt .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
+#fn-demo .xlt td.h{font-weight:500;color:#45413a;background:#faf8f3}
+#fn-demo .xlt td.num{text-align:right;font-variant-numeric:tabular-nums}
+#fn-demo .xlt td.pick{cursor:pointer}
+#fn-demo .xlt td.pick:hover{background:#f6fbf8}
+#fn-demo .xlt .gap{border:none;background:none}
+#fn-demo td.fcell.sel{box-shadow:inset 0 0 0 var(--frame-inset) #217346;background:#f6fbf8}
+#fn-demo td.fcell.err{color:#d13438;font-weight:500}
+/* 被公式引用的格子：Excel 的蓝色引用框（过程态，格内反馈不缩放） */
+#fn-demo .xlt td.refsel{box-shadow:inset 0 0 0 2px #2b6fd4;background:#eaf2fe}
+#fn-demo .xlt td.newrow{background:#fff8e1}
+/* 动画过程态（瞬态） */
+#fn-demo .okflash{animation:fd-okflash .8s ease}
+@keyframes fd-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 var(--frame-inset) #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 var(--frame-inset) #1e9e57}100%{background:#fff;box-shadow:none}}
+#fn-demo .warnflash{animation:fd-warnflash .8s ease}
+@keyframes fd-warnflash{0%{background:#f6c87f;box-shadow:inset 0 0 0 var(--frame-inset) #b3620a}55%{background:#faeacd;box-shadow:inset 0 0 0 var(--frame-inset) #b3620a}100%{background:#fff;box-shadow:none}}
+#fn-demo .shake{animation:fd-shake .45s}
+@keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+/* 覆盖层 */
+#fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
+#fn-demo .probe{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);border:2px solid #fff;box-sizing:border-box;box-shadow:0 1px 6px rgba(37,99,235,.45);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
+#fn-demo .probe.on{opacity:1}
+#fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c)}
+@keyframes fd-pulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4),0 0 0 2px #fff}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5),0 0 0 2px #fff}}
+#fn-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0;white-space:nowrap}
+#fn-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
+/* 工作表页签（切换右表） */
+#fn-demo .tabs{display:flex;gap:4px;padding:8px 10px 0;border-top:1px solid #e6e1d4;background:#f6f4ef}
+#fn-demo .tab{font:inherit;font-size:12px;padding:4px 16px;border:1px solid #d7d1c3;border-bottom:none;border-radius:6px 6px 0 0;background:#eee9dd;color:#6f6a5e;cursor:pointer}
+#fn-demo .tab.on{background:#fff;color:#217346;font-weight:600;box-shadow:inset 0 2px 0 #217346}
+/* 执行流水线：原料文本 → 解析 → 成品 */
+#fn-demo .pipe{max-width:620px;margin:14px auto 0;border:1px solid #e2dccd;border-radius:10px;background:#fff;padding:10px 12px;display:flex;gap:6px;align-items:stretch;flex-wrap:wrap}
+#fn-demo .st{flex:1 1 130px;border:1px dashed #d7d1c3;border-radius:8px;padding:6px 7px;min-width:110px;background:#fdfcf9}
+#fn-demo .st.st-parse{flex:1.5 1 190px}
+#fn-demo .st.st-out{flex:0 0 auto;min-width:0;display:flex;align-items:center}
+#fn-demo .st-t{font-size:11px;color:#6f6a5e;margin-bottom:4px;letter-spacing:1px}
+#fn-demo .st.st-out .st-t{display:none}
+#fn-demo .st.st-out::before{content:"成品";font-size:11px;color:#6f6a5e;margin-right:6px;letter-spacing:1px}
+#fn-demo .arrow{align-self:center;color:#b3ab9c;font-size:15px}
+#fn-demo .chips{min-height:24px;font-family:Consolas,monospace;font-size:12px;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+#fn-demo .chip{font-family:Consolas,monospace;font-size:12px;border-radius:6px;padding:2px 8px;display:inline-block;border:1px solid}
+#fn-demo .chip.c1{background:#d6e4fd;border-color:#9dbdf8;color:#1d4ed8}
+#fn-demo .chip.c2{background:#e7d9fc;border-color:#c3a8f2;color:#6d28d9}
+#fn-demo .chip.c3{background:#fce8c8;border-color:#eec98a;color:#8a4b06}
+#fn-demo .chip.c4{background:#dff0e5;border-color:#a8d8bc;color:#116a3c}
+#fn-demo .chip.cerr{background:#fdecec;border-color:#efc3c3;color:#d13438;font-weight:700}
+#fn-demo .chip.pop-in{animation:fd-popin .3s ease}
+#fn-demo .plus{color:#b3ab9c;margin:0 2px}
+#fn-demo .verdict{font-weight:700;font-size:12px;margin-left:4px}
+#fn-demo .verdict.ok{color:#188a4c}
+#fn-demo .verdict.bad{color:#d13438}
+#fn-demo .final{font-family:Consolas,monospace;font-size:16px;font-weight:700;background:#fce8c8;border:1px solid #eec98a;border-radius:6px;padding:2px 10px;color:#8a4b06;display:inline-block;min-width:44px;text-align:center;align-self:center}
+#fn-demo .final.err{background:#fdecec;border-color:#efc3c3;color:#d13438}
+#fn-demo .final.warn{background:#fdf3e3;border-color:#f0d3a1;color:#b3620a}
+#fn-demo .final.okflash{animation:fd-okflash2 .8s ease}
+@keyframes fd-okflash2{0%{background:#7fd6a2;border-color:#1e9e57}55%{background:#cdeedd;border-color:#1e9e57}100%{background:#fce8c8;border-color:#eec98a}}
+#fn-demo .final.warnflash{animation:fd-warnflash2 .8s ease}
+@keyframes fd-warnflash2{0%{background:#f6c87f;border-color:#b3620a}55%{background:#faeacd;border-color:#b3620a}100%{background:#fdf3e3;border-color:#f0d3a1}}
+/* 控件与叙事气泡 */
+#fn-demo .btn-p,#fn-demo .btn-s{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer;margin-right:8px}
+#fn-demo .btn-p{background:#217346;border-color:#217346;color:#fff}
+#fn-demo .btn-p:disabled{opacity:.55;cursor:default}
+#fn-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0;line-height:1.5}
+#fn-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
+#fn-demo .narr.err{background:#fdecec;border-color:#efc3c3}
+#fn-demo .narr.warn{background:#fdf3e3;border-color:#f0d3a1}
+#fn-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+#fn-demo .narr.ok .dot{background:var(--p4)}
+#fn-demo .narr.err .dot{background:#d13438}
+#fn-demo .narr.warn .dot{background:#b3620a}
+#fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#fn-demo [tabindex="0"]:focus-visible,#fn-demo button:focus-visible,#fn-demo input:focus-visible{outline:2px solid #217346;outline-offset:2px}
+/* 参数台（为什么实验区） */
+#fn-demo .sandbox{max-width:620px;margin:18px auto 0;border:1px solid #e2dccd;border-radius:10px;background:#fff;padding:12px 14px}
+#fn-demo .sb-t{font-size:13px;font-weight:700;margin-bottom:2px}
+#fn-demo .sb-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0 2px}
+#fn-demo .sb-lab{font-size:12px;color:#6f6a5e;min-width:64px;font-weight:600}
+#fn-demo .sb-hint{font-size:11.5px;color:#8a8271;margin:2px 0 4px 72px;line-height:1.6}
+#fn-demo .kbtn{font-family:Consolas,monospace;font-size:12.5px;padding:4px 10px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
+#fn-demo .kbtn:hover{border-color:#217346}
+#fn-demo .kbtn[aria-pressed="true"]{background:#217346;border-color:#217346;color:#fff;font-weight:700}
+#fn-demo .kbtn[aria-disabled="true"]{opacity:.4;cursor:default;pointer-events:none}
+#fn-demo .klink{outline:2px solid #d97a06;outline-offset:1px}
+/* 静默错小剧场 */
+#fn-demo .gotcha{margin-top:8px;border:1px solid #f0d3a1;background:#fdf8ec;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.7}
+#fn-demo .gotcha .gv{font-family:Consolas,monospace;font-weight:700}
+#fn-demo .gotcha .bad{color:#b3620a}
+#fn-demo .gotcha .good{color:#188a4c}
+/* 口诀卡 */
+#fn-demo .mantra{max-width:620px;margin:18px auto 0;border:1px solid #e2dccd;border-radius:10px;background:#fbfaf7;padding:10px 14px}
+#fn-demo .mantra-t{font-weight:700;font-size:13px;color:#217346;margin-bottom:6px}
+#fn-demo .mantra li{font-size:13px;margin:4px 0 4px 18px;line-height:1.6}
+#fn-demo .mantra code{font-family:Consolas,monospace;background:#f1ede2;border-radius:3px;padding:0 4px}
+@media (max-width:560px){
+  #fn-demo .sb-hint{margin-left:0}
+  #fn-demo .sb-lab{min-width:auto}
+  #fn-demo .narr{display:flex}
+}
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div id="fn-demo">
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<h3>INDIRECT 是怎么工作的？</h3>
+<p class="sub">汇总表要按月份名去各月工作表取数：A 列写着「三月」，想取三月表 C5 的外套销售额，公式却拿单元格里的文字没办法——直接写 三月!C5 只会被当成一串文本，一行行写死引用，月份一变全要手改。INDIRECT 把一段文本当场翻译成地址，进门把值取出来：地址是拼出来的，月份一换，取数跟着换。</p>
+
+<div class="xl">
+  <div class="xl-title"><span>INDIRECT-按月取数.xlsx</span><span style="opacity:.72;font-size:11px">已自动保存</span></div>
+  <div class="xl-ribbon" aria-hidden="true">开始　插入　公式　数据　审阅</div>
+  <div class="fx"><span class="name" id="fd-namebox">B2</span><div class="fl" id="fd-fl"></div></div>
+  <div class="legend" aria-hidden="true">
+    <span><i style="background:#2563eb"></i>文本来源（月份格 / 数字）</span>
+    <span><i style="background:#7c3aed"></i>表名</span>
+    <span><i style="background:#d97a06"></i>地址里的行与列</span>
+    <span><i style="background:#188a4c"></i>样式开关 FALSE</span>
+  </div>
+  <div class="grid-scroll"><div class="grid-box" id="fd-gbox">
+    <table class="xlt" id="fd-xlt"></table>
+    <div class="ovl"><div class="probe" id="fd-probe"></div><div class="chipfly" id="fd-chipfly"></div></div>
+  </div></div>
+  <div class="tabs" role="tablist" aria-label="月度工作表">
+    <button class="tab on" id="fd-tab-1" role="tab" aria-selected="true" type="button">一月</button>
+    <button class="tab" id="fd-tab-2" role="tab" aria-selected="false" type="button">二月</button>
+    <button class="tab" id="fd-tab-3" role="tab" aria-selected="false" type="button">三月</button>
+  </div>
+</div>
+
+<div style="margin-top:12px">
+  <button id="fd-play" class="btn-p" type="button">▶ 播放</button>
+  <button id="fd-step" class="btn-s" type="button">≫ 单步</button>
+  <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
+  <span class="narr" aria-live="polite"><span class="dot"></span><span id="fd-narrtx">准备就绪</span></span>
+</div>
+
+<!-- 执行流水线：文本原料 → 解析（表名·列·行）→ 成品 -->
+<div class="pipe" aria-hidden="false">
+  <div class="st"><div class="st-t">原料（文本）</div><div class="chips" id="fd-raw"><span class="plus">—</span></div></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="st st-parse"><div class="st-t">解析（表名 · 列 · 行）</div><div class="chips" id="fd-parse"><span class="plus">—</span></div></div>
+  <div class="arrow" aria-hidden="true">→</div>
+  <div class="st st-out"><div class="final" id="fd-final">—</div></div>
+</div>
+
+<p class="sr-only" id="fd-summary">INDIRECT 把一段文本当作单元格地址，返回该地址里的值。参数两个：ref_text 地址文本（必填，可以是用 & 号拼出来的，比如 A2&"!C5" 拼出一月!C5；也可以是写死的字符串，比如 "三月!C5"），a1 样式开关（TRUE 或省略按 A1 样式解析，FALSE 按 R1C1 样式解析）。执行分四步：先把参数变成一段文本，数字会先被转成文本；再按指定样式解析这段文本，拆出表名、列、行，拼不出合法地址就返回 #REF!——行号从 1 数起，0 和负数不行，纯数字 5 也当不了地址，R1C1 文本忘写 FALSE 会按 A1 解析失败；解析合法就顺着表名翻到对应工作表，定位到目标格；最后把目标格的值写回公式格，比如三月表 C5 的 12876。要提防的静默错：文本地址不会跟着插行删行自动改写——在三月表插一行后外套从 C5 挪到 C6，"三月!C5" 还读 C5，拿到帽子的 288，比真实的 12876 少 12588 且全程不报错；直接写的引用 =三月!C5 会自动改写成 =三月!C6。页面实验区可以切换地址来源（跟月份拼或写死）、切换 A1 与 R1C1 解析样式、喂入行号 0 和纯数字看 #REF!，并用插行小剧场演示文本地址不联动的静默错。</p>
+
+<div class="sandbox">
+  <div class="sb-t">为什么这样填？换一种喂法，看它怎么办</div>
+  <div class="sb-row" id="fd-k-src">
+    <span class="sb-lab">地址来源</span>
+    <button class="kbtn" type="button" data-src="concat" aria-pressed="true">跟月份拼</button>
+    <button class="kbtn" type="button" data-src="fixed" aria-pressed="false">写死「一月」</button>
+    <span class="sb-hint" style="margin-left:0">写死后点左边「三月」那行——结果停在 9620 不跟了。这就是最常用的拼接要解决的问题。</span>
+  </div>
+  <div class="sb-row" id="fd-k-style">
+    <span class="sb-lab">解析样式</span>
+    <button class="kbtn" type="button" data-style="a1" aria-pressed="true">A1 样式</button>
+    <button class="kbtn" type="button" data-style="r1c1" aria-pressed="false">R1C1＋FALSE</button>
+    <button class="kbtn" type="button" data-style="r1c1n" aria-pressed="false">R1C1 忘写 FALSE</button>
+    <span class="sb-hint" style="margin-left:0">"R4C1" 是第 4 行第 1 列（A4）。文本是 R1C1 写法，就得用第二参数 FALSE 告诉解析器。</span>
+  </div>
+  <div class="sb-row" id="fd-k-bad">
+    <span class="sb-lab">坏文本</span>
+    <button class="kbtn" type="button" data-bad="" aria-pressed="true">都合法（默认）</button>
+    <button class="kbtn" type="button" data-bad="row0" aria-pressed="false">行号 0：三月!C0</button>
+    <button class="kbtn" type="button" data-bad="num5" aria-pressed="false">纯数字 5</button>
+    <span class="sb-hint" style="margin-left:0">地址拼不合法，解析当场翻车。选中坏文本后上面两组先失效。</span>
+  </div>
+  <div class="gotcha" id="fd-gotcha">
+    在「三月」表第 4 行上面插一行新品，外套从 C5 挪到 C6：直接写的引用 <span class="gv good">=三月!C5</span> 会自动改写成 C6，照样取到 <span class="gv good">12876</span>；
+    文本地址 <span class="gv">"三月!C5"</span> 不改写，INDIRECT 依旧读 C5——拿到帽子的 <span class="gv bad">288</span>，比真实的 12876 少 <span class="gv bad">12588</span>，全程不报错。
+    <button class="kbtn" id="fd-gotcha-play" type="button" style="margin-left:6px">演示插一行</button>
+  </div>
+</div>
+
+<div class="mantra">
+  <div class="mantra-t">INDIRECT 口诀（截图存好）</div>
+  <ul>
+    <li>文本当地址，进门就取货：<code>=INDIRECT("三月!C5")</code> → <code>12876</code></li>
+    <li>最常用是现拼：<code>=INDIRECT(A2&amp;"!C5")</code>，月份一换全表跟着换</li>
+    <li>R1C1 文本要带 FALSE：<code>=INDIRECT("R4C1",FALSE)</code></li>
+    <li>拼不出合法地址就 #REF!：行号从 1 数起，纯数字 5 也当不了地址</li>
+    <li>文本地址不跟着插行改门牌——数据挪窝它还看老地方，直接引用才会自动改写</li>
+  </ul>
+</div>
+
+</div>
+<script>
+(function(){
+const R=document.getElementById('fn-demo');
+/* ── 数据槽：左=汇总表（月份+公式列）；右=各月工作表（C5 恒为外套行） ── */
+const SUM=[{m:'一月'},{m:'二月'},{m:'三月'}];
+const MONTHS={
+  '一月':[['衬衫',110,8800],['裤子',95,6900],['帽子',36,252],['外套',48,9620],['围巾',64,4800]],
+  '二月':[['衬衫',118,9100],['裤子',97,7050],['帽子',33,264],['外套',52,11480],['围巾',61,5050]],
+  '三月':[['衬衫',124,9600],['裤子',102,7350],['帽子',36,288],['外套',55,12876],['围巾',58,5220]]
+};
+const INSERT_ROW=['马甲',30,1800];
+const TABS=['一月','二月','三月'];
+
+let activeRow=2,view='一月',S={src:'concat',style:'a1',bad:null},inserted=false;
+let token=0,steps=[],stepIdx=0,running=false,idleTimer=0,cel={};
+
+const gbox=R.querySelector('#fd-gbox'),probe=R.querySelector('#fd-probe'),chipfly=R.querySelector('#fd-chipfly'),
+      xlt=R.querySelector('#fd-xlt'),flEl=R.querySelector('#fd-fl'),namebox=R.querySelector('#fd-namebox'),
+      narrEl=R.querySelector('#fd-narrtx'),narrWrap=narrEl.parentElement,
+      playBtn=R.querySelector('#fd-play'),stepBtn=R.querySelector('#fd-step'),resetBtn=R.querySelector('#fd-reset'),
+      rawEl=R.querySelector('#fd-raw'),parseEl=R.querySelector('#fd-parse'),finalEl=R.querySelector('#fd-final');
+
+function pos(el){const r=el.getBoundingClientRect(),b=gbox.getBoundingClientRect();return{l:r.left-b.left,t:r.top-b.top,w:r.width,cx:r.left-b.left+r.width/2,cy:r.top-b.top+r.height/2}}
+function narr(tx,mode){narrEl.textContent=tx;narrWrap.classList.remove('ok','err','warn');if(mode)narrWrap.classList.add(mode)}
+const sleep=(ms,my)=>new Promise((res,rej)=>setTimeout(()=>{my!==undefined&&my!==token?rej(0):res()},ms));
+function probeTo(el){const p=pos(el);probe.style.left=p.cx+'px';probe.style.top=p.cy+'px';probe.classList.add('on')}
+function fly(fromEl,toEl,val,my){return new Promise((res,rej)=>{const a=pos(fromEl),b=pos(toEl);chipfly.textContent=val;chipfly.style.transition='none';chipfly.style.left=a.cx+'px';chipfly.style.top=a.cy+'px';chipfly.classList.add('on');chipfly.offsetHeight;chipfly.style.transition='';requestAnimationFrame(()=>{chipfly.style.left=b.cx+'px';chipfly.style.top=b.cy+'px'});setTimeout(()=>{my!==undefined&&my!==token?rej(0):(chipfly.classList.remove('on'),res())},600)})}
+
+/* ── 场景推导：坏文本 > 解析样式 > 地址来源 ── */
+function scenOf(){if(S.bad==='row0')return'row0';if(S.bad==='num5')return'num5';if(S.style==='r1c1')return'r1c1';if(S.style==='r1c1n')return'r1c1n';return S.src}
+function effRows(sh){let rows=MONTHS[sh];if(sh==='三月'&&inserted){rows=rows.slice();rows.splice(2,0,INSERT_ROW)}return rows}
+function derefVal(sheet,col,rn){
+  if(!sheet){if(col==='A'&&rn>=2&&rn<=4)return SUM[rn-2].m;return'0'}
+  const rows=effRows(sheet),i=rn-2;
+  if(i<0||i>=rows.length)return'0';
+  const j=col==='A'?0:col==='B'?1:col==='C'?2:-1;
+  if(j<0)return'0';
+  const v=rows[i][j];return v===undefined?'0':v;
+}
+/* 求值计划：真实执行顺序的单一来源 */
+function plan(scen,row){
+  const month=SUM[row-2].m;
+  if(scen==='concat')return{raw1:{t:'「'+month+'」',c:'c1'},raw2:{t:'"!C5"',c:'c3'},joined:month+'!C5',
+    parse:{ok:true,chips:[{t:'表名 '+month,c:'c2'},{t:'列 C',c:'c3'},{t:'行 5',c:'c3'}]},
+    sheet:month,col:'C',rn:5,addr:'m_C5'};
+  if(scen==='fixed')return{raw1:{t:'「一月!C5」',c:'c2'},joined:'一月!C5',
+    parse:{ok:true,chips:[{t:'表名 一月',c:'c2'},{t:'列 C',c:'c3'},{t:'行 5',c:'c3'}]},
+    sheet:'一月',col:'C',rn:5,addr:'m_C5'};
+  if(scen==='r1c1')return{raw1:{t:'「R4C1」',c:'c3'},joined:'R4C1',
+    parse:{ok:true,chips:[{t:'行 4',c:'c3'},{t:'列 1',c:'c3'}]},
+    sheet:null,col:'A',rn:4,trans:'A4',addr:'A4'};
+  if(scen==='r1c1n')return{raw1:{t:'「R4C1」',c:'c3'},joined:'R4C1',
+    parse:{ok:false,chips:[{t:'按 A1 样式读「R4C1」',c:'cerr'}],why:'"R4C1" 按 A1 样式读不出来 → #REF!。R1C1 文本要补第二参数 FALSE'},err:'#REF!'};
+  if(scen==='row0')return{raw1:{t:'「三月!C0」',c:'c2'},joined:'三月!C0',
+    parse:{ok:false,chips:[{t:'表名 三月 ✓',c:'c2'},{t:'列 C ✓',c:'c3'},{t:'行 0 ✗',c:'cerr'}],why:'行号从 1 数起，第 0 行不存在 → #REF!'},err:'#REF!'};
+  return{raw1:{t:'数字 5',c:'c1'},joined:'「5」',coerce:true,
+    parse:{ok:false,chips:[{t:'文本「5」',c:'c1'},{t:'不是合法地址 ✗',c:'cerr'}],why:'「5」不是合法地址 → #REF!。数字想当地址用，先用 TEXT() 转成文本再拼'},err:'#REF!'};
+}
+/* 公式栏分段 */
+function fxParts(scen,row){
+  if(scen==='concat')return[{t:'A'+row,c:'s1',link:'src'},{t:'&',c:null},{t:'"!C5"',c:'s3',link:'target'}];
+  if(scen==='fixed')return[{t:'"一月',c:'s2',link:'target'},{t:'!C5"',c:'s3',link:'target'}];
+  if(scen==='r1c1')return[{t:'"R4C1"',c:'s3',link:'target'},{t:',',c:null},{t:'FALSE',c:'s4',link:'style'}];
+  if(scen==='r1c1n')return[{t:'"R4C1"',c:'s3',link:'target'}];
+  if(scen==='row0')return[{t:'"三月',c:'s2',link:'bad'},{t:'!C0"',c:'s3',link:'bad'}];
+  return[{t:'5',c:'s1',link:'bad'}];
+}
+function renderFx(){
+  const parts=fxParts(scenOf(),activeRow);
+  flEl.innerHTML='<span>=INDIRECT(</span>'+parts.map(p=>p.c?'<span class="seg '+p.c+'" data-link="'+p.link+'">'+p.t+'</span>':'<span>'+p.t+'</span>').join('')+'<span>)</span>';
+}
+/* 公式段与数据/参数台联动（事件委托，innerHTML 重建也有效） */
+flEl.addEventListener('mouseover',e=>{const s=e.target.closest('.seg');if(!s)return;const k=linkEl(s.dataset.link);if(k)k.classList.add('klink');const c=linkCell(s.dataset.link);if(c)c.classList.add('refsel')});
+flEl.addEventListener('mouseout',e=>{const s=e.target.closest('.seg');if(!s)return;const k=linkEl(s.dataset.link);if(k)k.classList.remove('klink');const c=linkCell(s.dataset.link);if(c)c.classList.remove('refsel')});
+flEl.addEventListener('click',e=>{const s=e.target.closest('.seg');if(!s)return;narr({
+  src:'ref_text 的这一半来自 A'+activeRow+' 格子——月份换了它就换',
+  target:'这一截是地址里的行与列：C 列第 5 行，每张月表的第 5 行都放着同一个商品',
+  style:'第二参数 FALSE：告诉 INDIRECT 按 R1C1 样式解析；省略等同 TRUE，按 A1 样式',
+  bad:'这段文本拼不成合法地址，解析阶段当场 #REF!'
+}[s.dataset.link]||'')});
+function linkEl(k){return{style:R.querySelector('#fd-k-style'),bad:R.querySelector('#fd-k-bad')}[k]}
+function linkCell(k){const p=plan(scenOf(),activeRow);if(k==='src')return cel['A'+activeRow];if(k==='target'&&p.parse.ok)return cel[p.addr];return null}
+
+/* ── 流水线渲染 ── */
+function rawHTML(n){ /* n=0 空 / 1 第一块 / 2 齐 */
+  const p=plan(scenOf(),activeRow);
+  if(n===0)return'<span class="plus">—</span>';
+  if(scenOf()==='concat'){
+    const a='<span class="chip c1'+(n===1?' pop-in':'')+'">'+p.raw1.t+'</span>';
+    if(n===1)return a;
+    return a+'<span class="plus">+</span><span class="chip c3 pop-in">'+p.raw2.t+'</span><span class="plus">→</span><span class="chip c1">'+p.joined+'</span>';
+  }
+  return'<span class="chip '+p.raw1.c+' pop-in">'+p.raw1.t+'</span>';
+}
+function parseHTML(p,show){
+  if(!show)return'<span class="plus">—</span>';
+  return p.chips.map(c=>'<span class="chip '+c.c+'">'+c.t+'</span>').join('')+(p.ok?'<span class="verdict ok">✓</span>':'<span class="verdict bad">✗</span>');
+}
+function renderFinal(val,mode){
+  finalEl.textContent=val;finalEl.classList.remove('err','warn');
+  if(mode)finalEl.classList.add(mode);
+}
+
+/* ── 网格渲染 ── */
+const COLW=[26,64,112,18,64,60,96];
+function renderGrid(){
+  const rows=effRows(view),nRight=rows.length+1; /* 数据占 2..nRight+1 行 */
+  let h='<colgroup>'+COLW.map(w=>'<col style="width:'+w+'px">').join('')+'</colgroup><tbody>';
+  h+='<tr><th class="rh"></th><th class="ch">A</th><th class="ch">B</th><th class="gap"></th><th class="ch">A</th><th class="ch">B</th><th class="ch">C</th></tr>';
+  h+='<tr><th class="rh">1</th><td class="h">月份</td><td class="h">外套销售额（元）</td><td class="gap"></td><td class="h">商品</td><td class="h">销量</td><td class="h">销售额（元）</td></tr>';
+  for(let r=2;r<=8;r++){
+    h+='<tr><th class="rh">'+r+'</th>';
+    if(r>=2&&r<=4){
+      const m=SUM[r-2].m;
+      h+='<td class="pick" tabindex="0" role="button" aria-label="切到 '+m+' 并重放" aria-pressed="'+String(r===activeRow)+'" data-a="A'+r+'">'+m+'</td>';
+      h+='<td class="num fcell'+(r===activeRow?' sel':'')+'" tabindex="0" role="button" aria-label="查看第 '+r+' 行的结果" aria-pressed="'+String(r===activeRow)+'" data-a="B'+r+'"></td>';
+    }else{
+      h+='<td data-a="A'+r+'"></td><td data-a="B'+r+'"></td>';
+    }
+    h+='<td class="gap"></td>';
+    const d=rows[r-2];
+    if(d){
+      const nw=(view==='三月'&&inserted&&r===4)?' newrow':'';
+      h+='<td class="h'+nw+'" data-a="m_A'+r+'">'+d[0]+'</td><td class="num'+nw+'" data-a="m_B'+r+'">'+d[1]+'</td><td class="num'+nw+'" data-a="m_C'+r+'">'+d[2]+'</td>';
+    }else{
+      h+='<td data-a="m_A'+r+'"></td><td data-a="m_B'+r+'"></td><td data-a="m_C'+r+'"></td>';
+    }
+    h+='</tr>';
+  }
+  h+='</tbody>';
+  xlt.innerHTML=h;
+  cel={};xlt.querySelectorAll('[data-a]').forEach(el=>{cel[el.dataset.a]=el});
+  xlt.querySelectorAll('td.pick').forEach(td=>{
+    td.addEventListener('click',()=>setActive(parseInt(td.dataset.a.slice(1),10)));
+    td.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();td.click()}});
+  });
+  TABS.forEach((m,i)=>{const t=R.querySelector('#fd-tab-'+(i+1));t.classList.toggle('on',view===m);t.setAttribute('aria-selected',String(view===m))});
+  for(let r=2;r<=4;r++)cel['B'+r].addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setActive(r)}});
+}
+
+/* ── 步骤构建：真实求值顺序 ── */
+function buildSteps(){
+  const scen=scenOf(),row=activeRow,p=plan(scen,row),st=[];
+  st.push(async my=>{flEl.classList.remove('flash');void flEl.offsetWidth;flEl.classList.add('flash');narr('先看一眼公式本身');await sleep(950,my);flEl.classList.remove('flash')});
+  if(scen==='concat'){
+    st.push(async my=>{const a=cel['A'+row];a.classList.add('refsel');probeTo(a);rawEl.innerHTML=rawHTML(1);narr('读 A'+row+'：「'+SUM[row-2].m+'」——地址的第一块原料到手');await sleep(950,my);a.classList.remove('refsel')});
+    st.push(async my=>{rawEl.innerHTML=rawHTML(2);narr('拼上 "!C5"，得到文本「'+p.joined+'」——公式先把它当纯文本攒着');await sleep(1050,my)});
+  }else{
+    st.push(async my=>{rawEl.innerHTML=rawHTML(1);narr(scen==='num5'?'参数是数字 5——它还不是文本':'原料是一段写死的文本「'+p.joined+'」');await sleep(850,my)});
+  }
+  if(p.coerce){
+    st.push(async my=>{rawEl.innerHTML='<span class="chip c1">数字 5</span><span class="plus">→</span><span class="chip c1 pop-in">「5」</span>';narr('数字 5 先被转成文本「5」——接下来按地址解析它');await sleep(950,my)});
+  }
+  if(p.parse.ok){
+    st.push(async my=>{parseEl.innerHTML=parseHTML(p.parse,true);narr('解析通过：'+p.parse.chips.map(c=>c.t).join('、')+(p.trans?'——翻过来就是 '+p.trans:'——合法地址'));await sleep(1100,my)});
+    st.push(async my=>{
+      if(p.sheet&&p.sheet!==view){
+        view=p.sheet;renderGrid();prefill();
+        const fb=cel['B'+row];if(fb){fb.textContent='';fb.classList.remove('err')}
+        probe.classList.remove('on');await sleep(350,my);
+      }
+      const t=cel[p.addr];t.classList.add('refsel');probeTo(t);probe.classList.add('good');
+      narr(p.sheet?'顺着表名翻到「'+p.sheet+'」表，'+p.addr.replace('m_','')+' 就在这儿':p.trans+'——就在当前表，被引用的格子亮蓝框');
+      await sleep(1000,my);
+    });
+    st.push(async my=>{
+      const t=cel[p.addr];if(!t)return;
+      const v=String(derefVal(p.sheet,p.col,p.rn));
+      const item=p.sheet?effRows(p.sheet)[p.rn-2][0]:null;
+      await fly(t,cel['B'+row],v,my);
+      const f=cel['B'+row];
+      f.textContent=v;f.classList.remove('err');f.classList.add('okflash');
+      renderFinal(v);probe.classList.remove('on','good');t.classList.remove('refsel');
+      const stuck=(scen==='fixed'&&SUM[row-2].m!=='一月');
+      const tail=stuck?'——A'+row+' 明明是「'+SUM[row-2].m+'」，结果还是一月的：地址写死了':'';
+      narr(p.sheet?('取 '+p.addr.replace('m_','')+'（'+item+'）的 '+v+' 写回 B'+row+tail):('A4 里的「'+v+'」飞回 B'+row),stuck?'warn':'ok');
+      await sleep(900,my);f.classList.remove('okflash');
+    });
+  }else{
+    st.push(async my=>{parseEl.innerHTML=parseHTML(p.parse,true);narr(p.parse.why,'err');await sleep(700,my)});
+    st.push(async my=>{gbox.classList.add('shake');const f=cel['B'+row];f.textContent='#REF!';f.classList.add('err');renderFinal('#REF!','err');narr(p.parse.why,'err');probe.classList.remove('on');await sleep(850,my);gbox.classList.remove('shake')});
+  }
+  return st;
+}
+
+/* ── 引擎（token 守卫 + 单步打断 + 自动还原） ── */
+function clearTransient(){
+  R.querySelectorAll('.refsel,.okflash,.warnflash,.pop-in').forEach(el=>el.classList.remove('refsel','okflash','warnflash','pop-in'));
+  probe.classList.remove('on','good');chipfly.classList.remove('on');gbox.classList.remove('shake');flEl.classList.remove('flash');
+}
+function prefill(){
+  const scen=scenOf();
+  for(let r=2;r<=4;r++){
+    const f=cel['B'+r];if(!f)continue;
+    let v,mode='';
+    if(scen==='concat')v=String(derefVal(SUM[r-2].m,'C',5));
+    else if(scen==='fixed')v=String(derefVal('一月','C',5));
+    else if(scen==='r1c1')v=SUM[2].m;
+    else{v='#REF!';mode='err'}
+    f.textContent=v;f.classList.toggle('err',mode==='err');
+  }
+  renderFx();namebox.textContent='B'+activeRow;
+}
+function resetAndRun(){
+  clearTimeout(idleTimer);token++;clearTransient();
+  rawEl.innerHTML=rawHTML(0);parseEl.innerHTML=parseHTML(null,false);renderFinal('—');
+  const f=cel['B'+activeRow];if(f){f.textContent='';f.classList.remove('err')}
+  steps=buildSteps();stepIdx=0;runLoop();
+}
+function runLoop(){
+  const my=++token;running=true;playBtn.disabled=true;
+  (async()=>{try{while(stepIdx<steps.length){await steps[stepIdx++](my)}}catch(e){if(e!==0)console.error(e)}finally{if(my===token){running=false;playBtn.disabled=false;if(stepIdx>=steps.length)scheduleAutoReset()}}})();
+}
+function scheduleAutoReset(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{if(running)return;resetDemo(true)},10000)}
+function resetDemo(auto){
+  clearTimeout(idleTimer);token++;running=false;playBtn.disabled=false;
+  const gridChanged=inserted;S={src:'concat',style:'a1',bad:null};inserted=false;view='一月';activeRow=2;
+  if(gridChanged)renderGrid();else{TABS.forEach((m,i)=>{const t=R.querySelector('#fd-tab-'+(i+1));t.classList.toggle('on',view===m);t.setAttribute('aria-selected',String(view===m))})}
+  clearTransient();syncKnobs();rawEl.innerHTML=rawHTML(0);parseEl.innerHTML=parseHTML(null,false);renderFinal('—');
+  prefill();narr(auto?'已自动还原':'已还原默认公式');
+}
+playBtn.addEventListener('click',resetAndRun);
+stepBtn.addEventListener('click',()=>{
+  clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false;clearTransient()}
+  if(stepIdx>=steps.length){clearTransient();rawEl.innerHTML=rawHTML(0);parseEl.innerHTML=parseHTML(null,false);renderFinal('—');const f=cel['B'+activeRow];if(f){f.textContent='';f.classList.remove('err')}steps=buildSteps();stepIdx=0}
+  gbox.classList.remove('shake');
+  const my=++token;(async()=>{try{await steps[stepIdx++](my)}catch(e){if(e!==0)console.error(e)}})();
+});
+resetBtn.addEventListener('click',()=>resetDemo(false));
+
+/* ── 月份行切换 ── */
+function setActive(row,autorun){
+  clearTimeout(idleTimer);activeRow=row;
+  for(let r=2;r<=4;r++){const a=cel['A'+r],b=cel['B'+r];b.classList.toggle('sel',r===row);a.setAttribute('aria-pressed',String(r===row));b.setAttribute('aria-pressed',String(r===row))}
+  token++;clearTransient();prefill();
+  if(autorun===false)return;
+  resetAndRun();
+}
+TABS.forEach((m,i)=>{R.querySelector('#fd-tab-'+(i+1)).addEventListener('click',()=>{
+  if(view===m)return;clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false}
+  view=m;renderGrid();clearTransient();prefill();
+})});
+
+/* ── 参数台 ── */
+function syncKnobs(){
+  R.querySelectorAll('#fd-k-src .kbtn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.src===S.src)));
+  R.querySelectorAll('#fd-k-style .kbtn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.style===S.style)));
+  R.querySelectorAll('#fd-k-bad .kbtn').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.bad||'')===S.bad)));
+  const badOn=!!S.bad;
+  R.querySelectorAll('#fd-k-src .kbtn,#fd-k-style .kbtn').forEach(b=>b.setAttribute('aria-disabled',String(badOn)));
+}
+R.querySelectorAll('#fd-k-src .kbtn').forEach(b=>b.addEventListener('click',()=>{if(b.getAttribute('aria-disabled')==='true')return;S.src=b.dataset.src;syncKnobs();prefill();resetAndRun()}));
+R.querySelectorAll('#fd-k-style .kbtn').forEach(b=>b.addEventListener('click',()=>{if(b.getAttribute('aria-disabled')==='true')return;S.style=b.dataset.style;syncKnobs();prefill();resetAndRun()}));
+R.querySelectorAll('#fd-k-bad .kbtn').forEach(b=>b.addEventListener('click',()=>{S.bad=b.dataset.bad||null;syncKnobs();prefill();resetAndRun()}));
+
+/* ── 静默错小剧场：插一行，看文本地址还盯着老门牌 ── */
+R.querySelector('#fd-gotcha-play').addEventListener('click',()=>{
+  clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false}
+  const my=++token;clearTransient();
+  inserted=true;view='三月';renderGrid();prefill();
+  const fb=cel['B'+activeRow];if(fb){fb.textContent='';fb.classList.remove('err')}
+  rawEl.innerHTML=rawHTML(0);parseEl.innerHTML=parseHTML(null,false);
+  (async()=>{
+    try{
+      renderFinal('—');
+      const nr=cel['m_A4'];nr.classList.add('refsel');probeTo(nr);
+      narr('在「三月」表第 4 行上面插入新品「马甲」——外套被挤到第 6 行');await sleep(1400,my);nr.classList.remove('refsel');
+      const t=cel['m_C5'];t.classList.add('refsel');probeTo(t);
+      narr('文本地址 "三月!C5" 原封不动，还盯着 C5——现在 C5 里坐的是帽子');await sleep(1400,my);
+      const f=cel['B'+activeRow],v=String(derefVal('三月','C',5));
+      await fly(t,f,v,my);f.textContent=v;f.classList.remove('err');f.classList.add('warnflash');
+      renderFinal(v,'warn');probe.classList.remove('on','good');t.classList.remove('refsel');
+      narr('INDIRECT 拿到 '+v+'（帽子）；外套真实值 12876 已在 C6，直接引用会自动改写成 =三月!C6 取到 12876——文本地址差 12588，全程不报错','warn');
+      await sleep(1200,my);f.classList.remove('warnflash');
+    }catch(e){if(e!==0)console.error(e)}
+    finally{if(my===token)scheduleAutoReset()}
+  })();
+});
+
+/* ── 启动 ── */
+renderGrid();syncKnobs();prefill();
+const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500);
+})();
+</script>
+<script>
+/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
+(function(){
+  var el=document.getElementById('uv-count');
+  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
+  var PAGE_ID='tutorials/indirect';
+  try{
+    var v=localStorage.getItem('h2e_vid');
+    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
+    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
+      .then(function(r){return r.json()})
+      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
