@@ -137,11 +137,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .gotcha .gv{font-family:Consolas,monospace;font-weight:700}
 #fn-demo .gotcha .bad{color:#b3620a}
 #fn-demo .gotcha .good{color:#188a4c}
-/* 口诀卡 */
-#fn-demo .mantra{max-width:620px;margin:18px auto 0;border:1px solid #e2dccd;border-radius:10px;background:#fbfaf7;padding:10px 14px}
-#fn-demo .mantra-t{font-weight:700;font-size:13px;color:#217346;margin-bottom:6px}
-#fn-demo .mantra li{font-size:13px;margin:4px 0 4px 18px;line-height:1.6}
-#fn-demo .mantra code{font-family:Consolas,monospace;background:#f1ede2;border-radius:3px;padding:0 4px}
+/* 口诀卡（站内统一样式） */
+#fn-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#fn-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#fn-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#fn-demo .motto-l{font-size:14px;line-height:2}
+#fn-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
 #fn-demo .sec-t{max-width:620px;margin:20px auto 0;font-size:13px;font-weight:700;color:#45413a}
 @media (max-width:560px){
   #fn-demo .cards{grid-template-columns:1fr}
@@ -270,15 +271,11 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   </div>
 </div>
 
-<div class="mantra">
-  <div class="mantra-t">ADDRESS 口诀（截图存好）</div>
-  <ul>
-    <li>行列报数字，出来是门牌：<code>=ADDRESS(5,3,1)</code> → <code>$C$5</code></li>
-    <li>锁定问 F4：1 全锁 · 2 锁行 · 3 锁列 · 4 全放</li>
-    <li>列过 26 会进位：27 = AA，最后一列 <code>XFD</code>（16384）</li>
-    <li>R1C1 全用数字，方括号 = 会跑：<code>R5C[3]</code></li>
-    <li>门牌是文本，进门取货找 <code>INDIRECT</code>；跨表别忘了表名</li>
-  </ul>
+<div class="motto">
+  <div class="motto-t">口诀卡</div>
+  <div class="motto-f">=ADDRESS(5, 3) → $C$5</div>
+  <div class="motto-l">行列报数字，出来是门牌；列过 26 进位，F4 换锁档。<br>方括号是会跑的 R1C1，进门取货找 INDIRECT。</div>
+  <div class="motto-tip">进阶：四档锁定 1 全锁 · 2 锁行 · 3 锁列 · 4 全放，最后一列 XFD = 16384。门牌是文本不是货，跨表别忘了表名——取货交给 =INDIRECT("三月!C5")。</div>
 </div>
 
 </div>
