@@ -105,10 +105,6 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
 #fn-demo [tabindex="0"]:focus-visible,#fn-demo button:focus-visible{outline:2px solid #217346;outline-offset:2px}
-@media (prefers-reduced-motion: reduce){
-  #fn-demo .probe{animation:none !important}
-  #fn-demo *{scroll-behavior:auto !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
-}
 </style>
 </head>
 <body>
@@ -176,8 +172,8 @@ const DATA=[
   ["城西店","T恤",130],["西湖店","衬衫",220],["滨江店","毛衣",300]
 ];
 const N=DATA.length, LAST=N+1; /* 13 */
-const REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const SL=REDUCE?0.5:1;
+/* 单路径：不做 prefers-reduced-motion 分支——用户 Windows 为系统级 reduce，分支会吃掉全部动效（ADDRESS 页 T61 先例） */
+const SL=1;
 
 let mode='two',critStore='西湖店';
 let token=0,steps=[],stepIdx=0,running=false,idleTimer=0;
@@ -208,7 +204,6 @@ const sleep=(ms,my)=>new Promise((res,rej)=>setTimeout(()=>{my!==undefined&&my!=
 function probeTo(el,instant){const p=pos(el);if(instant){probe.style.transition='none';probe.style.left=p.cx+'px';probe.style.top=p.cy+'px';probe.offsetHeight;probe.style.transition=''}else{probe.style.left=p.cx+'px';probe.style.top=p.cy+'px'}probe.classList.add('on')}
 function fly(fromEl,toEl,val,my){return new Promise((res,rej)=>{const a=pos(fromEl),b=pos(toEl);chipfly.textContent=val;chipfly.style.transition='none';chipfly.style.left=a.cx+'px';chipfly.style.top=a.cy+'px';chipfly.classList.add('on');chipfly.offsetHeight;chipfly.style.transition='';requestAnimationFrame(()=>{chipfly.style.left=b.cx+'px';chipfly.style.top=b.cy+'px'});setTimeout(()=>{my!==undefined&&my!==token?rej(0):(chipfly.classList.remove('on'),res())},600)})}
 function rollTo(el,from,to,my){
-  if(REDUCE){if(my!==undefined&&my!==token)return Promise.resolve();el.textContent=String(to);return Promise.resolve()}
   return new Promise(res=>{const t0=performance.now(),dur=340;(function fr(){if(my!==undefined&&my!==token){res();return}const k=Math.min(1,(performance.now()-t0)/dur);el.textContent=String(Math.round(from+(to-from)*k));if(k<1)requestAnimationFrame(fr);else{el.textContent=String(to);res()}})()});
 }
 
