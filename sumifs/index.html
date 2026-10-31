@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUMIFS 是怎么工作的？——交互讲解</title>
+<!--
+  excel-function-explainer · SUMIFS 页（由 assets/skeleton.html 改造）
+  求值计划（真实执行顺序）：逐行 i=2..13 → 条件1(A列)检查 → 条件2(B列)检查 → 全过则 acc+=C[i]
+  已核验行为：① 区域行数不一致 → #VALUE!（SUMIFS 不自动扩展）② 文字条件全等匹配（大小写不敏感），含 * 启用通配符 ③ 条件值可来自单元格引用 ④ 最多 127 对条件
+  数据手算对平：西湖店×衬衫=320+150+220=690；含衬衫裙=870；西湖店全部=1410
+-->
+<style>
+:root{color-scheme:light;--foreground:#2b2723;--muted-foreground:#6d6759;--accent:#d97a06}
+body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
+#fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px;color:var(--foreground);font-size:14px;--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;--frame-inset:2px}
+#fn-demo h3{margin:0 0 2px}
+#fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+#fn-demo .backlink{color:#6d6759;text-decoration:none}
+#fn-demo .backlink:hover{color:#217346}
+#fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground)}
+/* Excel 拟真窗口（内部固定浅色） */
+#fn-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
+#fn-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between}
+#fn-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
+#fn-demo .fx{display:flex;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
+#fn-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
+#fn-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,monospace;white-space:nowrap;overflow-x:auto;transform-origin:left center}
+#fn-demo .fl.flash{animation:fd-fflash .95s ease}
+@keyframes fd-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01)}}
+/* 公式参数分段（深 pastel 底 + 同色系描边 + 加粗） */
+#fn-demo .seg{border-radius:4px;padding:1px 4px;font-weight:700;white-space:nowrap;cursor:default}
+#fn-demo .s1{background:#d6e4fd;color:#1e40af;box-shadow:inset 0 0 0 1px #9dbdf8}
+#fn-demo .s2{background:#e7d9fc;color:#5b21b6;box-shadow:inset 0 0 0 1px #c3a8f2}
+#fn-demo .s3{background:#fce8c8;color:#8a4b06;box-shadow:inset 0 0 0 1px #eec98a}
+#fn-demo .s4{background:#d9f2e3;color:#14532d;box-shadow:inset 0 0 0 1px #86cfa5}
+#fn-demo .seg-hi{outline:2px solid #217346;outline-offset:1px}
+/* 网格 */
+#fn-demo .grid-scroll{overflow-x:auto;padding:10px}
+#fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
+#fn-demo table.xlt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+#fn-demo .xlt th,#fn-demo .xlt td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap;transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
+#fn-demo .xlt .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
+#fn-demo .xlt .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
+#fn-demo .xlt td.h{font-weight:500;color:#45413a;background:#faf8f3}
+#fn-demo td.fcell.sel{box-shadow:inset 0 0 0 var(--frame-inset) #217346;background:#f6fbf8}
+#fn-demo td.fcell.err{color:#d13438;font-weight:500}
+#fn-demo .tabular-nums{font-variant-numeric:tabular-nums;text-align:right}
+/* 行点击手型 */
+#fn-demo td.cltk{cursor:pointer}
+#fn-demo td.cltk:hover{background:#f6fbf8}
+/* 动画过程态（瞬态） */
+#fn-demo .cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 var(--frame-inset) rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
+#fn-demo .dimc{background:#f7f5ef !important;color:#b3ab9c}
+#fn-demo .hitmark{background:#a9e4bd !important;box-shadow:inset 0 0 0 var(--frame-inset) #2f9e5f}
+#fn-demo .pop{box-shadow:inset 0 0 0 var(--frame-inset) #e8a33d, inset 0 0 0 999px rgba(242,178,92,.14)}
+#fn-demo .rgs1{background:#d6e4fd !important;box-shadow:inset 0 0 0 2px #9dbdf8}
+#fn-demo .rgs2{background:#e7d9fc !important;box-shadow:inset 0 0 0 2px #c3a8f2}
+#fn-demo .miss{background:#fdecec !important;box-shadow:inset 0 0 0 2px #d13438}
+#fn-demo .unused{color:#b3ab9c !important;background:#f4f2ec !important;border-bottom:1px dashed #cfc9ba}
+#fn-demo .okflash{animation:fd-okflash .8s ease}
+@keyframes fd-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 var(--frame-inset) #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 var(--frame-inset) #1e9e57}100%{background:#fff;box-shadow:none}}
+#fn-demo .shake{animation:fd-shake .45s}
+@keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+/* 覆盖层 */
+#fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
+#fn-demo .probe{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
+#fn-demo .probe.on{opacity:1}
+#fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c)}
+#fn-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438)}
+@keyframes fd-pulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
+#fn-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
+#fn-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
+/* 图例（公式段 ↔ 表格区域 ↔ 图例 三处联动） */
+#fn-demo .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px auto 0;max-width:620px;font-size:12px}
+#fn-demo .lg{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;border:1px solid #e2dccd;background:#fff;cursor:default}
+#fn-demo .lg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+#fn-demo .lg:hover{border-color:#9dbdf8}
+/* 控件与叙事气泡 */
+#fn-demo .btn-p,#fn-demo .btn-s{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer;margin-right:8px}
+#fn-demo .btn-p{background:#217346;border-color:#217346;color:#fff}
+#fn-demo .btn-p:disabled{opacity:.55;cursor:default}
+#fn-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
+#fn-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
+#fn-demo .narr.err{background:#fdecec;border-color:#efc3c3}
+#fn-demo .narr.warn{background:#fff4e5;border-color:#f0c48c}
+#fn-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+#fn-demo .narr.ok .dot{background:var(--p4)}
+#fn-demo .narr.err .dot{background:#d13438}
+#fn-demo .narr.warn .dot{background:#b3620a}
+/* 实验区与口诀卡 */
+#fn-demo .exp{max-width:620px;margin:16px auto 0;background:#fff;border:1px solid #e2dccd;border-radius:10px;padding:12px 14px}
+#fn-demo .exp h4,#fn-demo .mnemo h4{margin:0 0 6px;font-size:14px}
+#fn-demo .exphint{margin:0 0 8px;color:var(--muted-foreground);font-size:12.5px}
+#fn-demo .exp-btns{display:flex;flex-wrap:wrap;gap:8px}
+#fn-demo .exp-btns button{font:inherit;font-size:13px;padding:5px 12px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
+#fn-demo .exp-btns button[aria-pressed="true"]{background:#217346;border-color:#217346;color:#fff}
+#fn-demo .cmpcard{margin-top:10px;font-size:13px;background:#faf7f0;border:1px solid #e2dccd;border-radius:8px;padding:8px 12px;line-height:1.8}
+#fn-demo .cmpcard code{font-family:Consolas,monospace;background:#f1eee7;padding:0 4px;border-radius:4px}
+#fn-demo .cmpcard .v1,.cmpcard .v2{font-weight:700;font-family:Consolas,monospace}
+#fn-demo .cmpcard .v2{color:#188a4c}
+#fn-demo .cmpcard .dif{display:block;color:#8a4b06}
+#fn-demo .mnemo{max-width:620px;margin:12px auto 0;background:#fffdf5;border:1px solid #eadfae;border-radius:10px;padding:12px 16px}
+#fn-demo .mnemo ol{margin:0;padding-left:20px;font-size:13.5px;line-height:1.9}
+#fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
+#fn-demo [tabindex="0"]:focus-visible,#fn-demo button:focus-visible{outline:2px solid #217346;outline-offset:2px}
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div id="fn-demo">
+<!-- 部署为站点子路径（如 /sumifs/）时此链接跳回集合目录；本地单开可删 -->
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<h3>SUMIFS 是怎么工作的？</h3>
+<p class="sub">12 行订单流水，想算「西湖店的衬衫一共卖了多少钱」——门店、品类两个筛子同时套，手动挑行迟早漏一行；让 SUMIFS 按条件替你挑行、替你加总。</p>
+<div class="xl">
+  <div class="xl-title"><span>订单示例.xlsx</span><span style="opacity:.72;font-size:11px">已自动保存</span></div>
+  <div class="xl-ribbon" aria-hidden="true">开始　插入　公式　数据　审阅</div>
+  <div class="fx"><span class="name" id="fd-namebox">F4</span><div class="fl" id="fd-fl"></div></div>
+  <div class="grid-scroll"><div class="grid-box" id="fd-gbox">
+    <table class="xlt" id="fd-xlt"></table>
+    <div class="ovl"><div class="probe" id="fd-probe"></div><div class="chipfly" id="fd-chipfly"></div></div>
+  </div></div>
+</div>
+<div class="legend" aria-hidden="false">
+  <span class="lg" data-lg="s1"><i style="background:#2563eb"></i>求和区域（要加的列）</span>
+  <span class="lg" data-lg="s2"><i style="background:#7c3aed"></i>条件区域（挨行检查的列）</span>
+  <span class="lg" data-lg="s4"><i style="background:#188a4c"></i>条件值（要满足的条件）</span>
+  <span class="lg" data-lg="s3"><i style="background:#d97a06"></i>累计中间值（飞入与滚动合计）</span>
+</div>
+<div style="margin-top:12px">
+  <button id="fd-play" class="btn-p" type="button">▶ 播放</button>
+  <button id="fd-step" class="btn-s" type="button">≫ 单步</button>
+  <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
+  <span class="narr" aria-live="polite"><span class="dot"></span><span id="fd-narrtx">准备就绪</span></span>
+</div>
+<p class="sr-only" id="fd-summary">SUMIFS 交互讲解页。目标：对 12 行订单流水按「门店=西湖店、品类=衬衫」求和金额列。公式 =SUMIFS(C2:C13,A2:A13,F2,B2:B13,F3)，结果写入 F4：第一参数 C2:C13 是求和区域（蓝色，要加总的金额列）；随后条件成对出现——A2:A13 门店列配 F2 的「西湖店」、B2:B13 品类列配 F3 的「衬衫」（条件区域紫色、条件值绿色）。执行阶段：从第 2 行到第 13 行逐行检查，门店与品类都满足时把该行金额累加（累计中间值以橙色飞入动画与滚动数字呈现，本演示合计 690）；任一条件不符则整行跳过。实验区四个档位：一、只按门店一个条件——条件对可以增减，多一对条件就多砍一刀，结果 1410；二、品类条件改写「衬衫*」启用通配符——衬衫裙也计入，结果 870，比全等写法多 180（西湖店那件衬衫裙），说明文字条件默认全等匹配；三、求和区域故意少选两行（C2:C11）——SUMIFS 要求所有区域行数一致，直接返回 #VALUE!（自动扩展是 SUMIF 的老行为，别记混）。口诀：求和区域打头阵，条件成对跟在后；行行全过才累加，区域等长别错位；全等匹配要模糊，加 * 才放行。控件：播放、单步、还原；点表格行可把门店条件换成该行门店并重放。</p>
+<section class="exp">
+  <h4>为什么这样写？—— 改一个参数，看结果怎么变</h4>
+  <p class="exphint">每档都会重放一遍动画，切换时其他参数自动归位。档位一演示条件对可增减（多一对就多砍一刀）；档位二演示全等与通配符的差别；档位三演示区域不等长的代价。</p>
+  <div class="exp-btns">
+    <button type="button" data-m="two" aria-pressed="true">双条件 · 默认</button>
+    <button type="button" data-m="one" aria-pressed="false">只按门店</button>
+    <button type="button" data-m="wild" aria-pressed="false">品类写「衬衫*」</button>
+    <button type="button" data-m="short" aria-pressed="false">求和区域少 2 行</button>
+  </div>
+  <div class="cmpcard" id="fd-cmpcard" hidden>
+    <b>写法对比（门店=西湖店）</b><br>
+    品类条件写 <code>衬衫</code>（全等）→ <span class="v1">690</span>　｜　品类条件写 <code>衬衫*</code>（通配）→ <span class="v2">870</span>
+    <span class="dif">差的 180 正是西湖店那件「衬衫裙」：文字条件默认全等匹配，「含字就算」要显式加 *。（320+150+220=690，690+180=870，可手算核对）</span>
+  </div>
+</section>
+<section class="mnemo">
+  <h4>SUMIFS 五句口诀</h4>
+  <ol>
+    <li>求和区域打头阵 —— 第一个参数是「要加的那一列」</li>
+    <li>条件成对出现 —— 条件区域在前、条件值在后，一对一对往后排</li>
+    <li>行行全过才累加 —— 任一条件不符，整行跳过</li>
+    <li>区域必须等长 —— 求和区域与每个条件区域行数一致，短了直接 #VALUE!</li>
+    <li>文字条件全等才算 —— 要模糊请加 *，条件最多可写 127 对</li>
+  </ol>
+</section>
+</div>
+<script>
+(function(){
+const R=document.getElementById('fn-demo');
+/* 数据槽：门店 / 品类 / 金额 —— 手算对平：西湖店×衬衫=690，含衬衫裙=870，西湖店全部=1410 */
+const DATA=[
+  ["西湖店","衬衫",320],["西湖店","衬衫裙",180],["滨江店","衬衫",260],
+  ["西湖店","毛衣",450],["滨江店","衬衫裙",210],["西湖店","衬衫",150],
+  ["城西店","毛衣",380],["西湖店","T恤",90],["滨江店","衬衫",470],
+  ["城西店","T恤",130],["西湖店","衬衫",220],["滨江店","毛衣",300]
+];
+const N=DATA.length, LAST=N+1; /* 13 */
+const REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SL=REDUCE?0.5:1;
+
+let mode='two',critStore='西湖店';
+let token=0,steps=[],stepIdx=0,running=false,idleTimer=0;
+
+/* 建表：左区 A/B/C 数据表，右区 E 标签 + F 条件值与合计格（F2=门店条件，F3=品类条件，F4=结果） */
+const COLW=[26,66,66,62,14,52,80];
+let h='<colgroup>'+COLW.map(w=>'<col style="width:'+w+'px">').join('')+'</colgroup><tbody>';
+h+='<tr><th class="rh"></th><th class="ch" data-c="A">A</th><th class="ch" data-c="B">B</th><th class="ch" data-c="C">C</th><th style="border:none;background:none"></th><th class="ch">E</th><th class="ch">F</th></tr>';
+h+='<tr><th class="rh">1</th><td class="h" data-a="A1">门店</td><td class="h" data-a="B1">品类</td><td class="h" data-a="C1">金额(元)</td><td style="border:none;background:none"></td><td class="h" data-a="E1">条件</td><td class="h" data-a="F1">值</td></tr>';
+for(let r=2;r<=LAST;r++){
+  const d=DATA[r-2];
+  h+='<tr><th class="rh">'+r+'</th><td class="cltk" data-a="A'+r+'">'+d[0]+'</td><td class="cltk" data-a="B'+r+'">'+d[1]+'</td><td class="cltk tabular-nums" data-a="C'+r+'">'+d[2]+'</td>';
+  if(r===2)h+='<td style="border:none;background:none"></td><td data-a="E2">门店</td><td data-a="F2">'+critStore+'</td>';
+  else if(r===3)h+='<td style="border:none;background:none"></td><td data-a="E3">品类</td><td data-a="F3">衬衫</td>';
+  else if(r===4)h+='<td style="border:none;background:none"></td><td data-a="E4">合计</td><td class="tabular-nums fcell sel" data-a="F4"></td>';
+  h+='</tr>';
+}
+h+='</tbody>';
+R.querySelector('#fd-xlt').innerHTML=h;
+const cel={};R.querySelectorAll('[data-a]').forEach(el=>{cel[el.dataset.a]=el});
+const gbox=R.querySelector('#fd-gbox'),probe=R.querySelector('#fd-probe'),chipfly=R.querySelector('#fd-chipfly'),flEl=R.querySelector('#fd-fl');
+const narrEl=R.querySelector('#fd-narrtx'),narrWrap=narrEl.parentElement,playBtn=R.querySelector('#fd-play'),stepBtn=R.querySelector('#fd-step'),resetBtn=R.querySelector('#fd-reset');
+const cmpcard=R.querySelector('#fd-cmpcard'),expBtns=[].slice.call(R.querySelectorAll('.exp-btns button'));
+
+function pos(el){const r=el.getBoundingClientRect(),b=gbox.getBoundingClientRect();return{l:r.left-b.left,t:r.top-b.top,w:r.width,cx:r.left-b.left+r.width/2,cy:r.top-b.top+r.height/2}}
+function narr(tx,md){narrEl.textContent=tx;narrWrap.classList.remove('ok','err','warn');if(md)narrWrap.classList.add(md)}
+const sleep=(ms,my)=>new Promise((res,rej)=>setTimeout(()=>{my!==undefined&&my!==token?rej(0):res()},ms));
+function probeTo(el,instant){const p=pos(el);if(instant){probe.style.transition='none';probe.style.left=p.cx+'px';probe.style.top=p.cy+'px';probe.offsetHeight;probe.style.transition=''}else{probe.style.left=p.cx+'px';probe.style.top=p.cy+'px'}probe.classList.add('on')}
+function fly(fromEl,toEl,val,my){return new Promise((res,rej)=>{const a=pos(fromEl),b=pos(toEl);chipfly.textContent=val;chipfly.style.transition='none';chipfly.style.left=a.cx+'px';chipfly.style.top=a.cy+'px';chipfly.classList.add('on');chipfly.offsetHeight;chipfly.style.transition='';requestAnimationFrame(()=>{chipfly.style.left=b.cx+'px';chipfly.style.top=b.cy+'px'});setTimeout(()=>{my!==undefined&&my!==token?rej(0):(chipfly.classList.remove('on'),res())},600)})}
+function rollTo(el,from,to,my){
+  if(REDUCE){if(my!==undefined&&my!==token)return Promise.resolve();el.textContent=String(to);return Promise.resolve()}
+  return new Promise(res=>{const t0=performance.now(),dur=340;(function fr(){if(my!==undefined&&my!==token){res();return}const k=Math.min(1,(performance.now()-t0)/dur);el.textContent=String(Math.round(from+(to-from)*k));if(k<1)requestAnimationFrame(fr);else{el.textContent=String(to);res()}})()});
+}
+
+/* 条件匹配：全等（大小写不敏感）；含 * 时按通配符前缀/后缀匹配（与 Excel 一致，本页只用 *） */
+function critMatch(cell){
+  const c=String(cel['F3'].textContent);
+  if(c.indexOf('*')>=0){
+    const pat=c.split('*').map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('[\\s\\S]*');
+    return new RegExp('^'+pat+'$','i').test(String(cell));
+  }
+  return String(cell).toLowerCase()===c.toLowerCase();
+}
+/* 结果单一来源：预填 / 动画累计 / 实验档三处共用 */
+function computeVal(){
+  if(mode==='short')return{t:'#VALUE!',e:1};
+  let acc=0;
+  for(const d of DATA){
+    if(d[0]!==cel['F2'].textContent)continue;
+    if(mode!=='one'&&!critMatch(d[1]))continue;
+    acc+=d[2];
+  }
+  return{t:String(acc),e:0};
+}
+
+/* 公式分段着色（事件委托绑定 hover，innerHTML 重建无需重绑） */
+function seg(cls,txt,extra){return '<span class="seg '+cls+'" '+(extra||'')+'>'+txt+'</span>'}
+function renderFormula(){
+  const end=mode==='short'?11:13;
+  let f='<span>=</span><span>SUMIFS</span><span>(</span>';
+  f+=seg('s1','C2:C'+end,'data-r="s1" data-range="C2:C'+end+'"');
+  f+='<span>,</span>'+seg('s2','A2:A13','data-r="s2" data-range="A2:A13"');
+  f+='<span>,</span>'+seg('s4','F2','data-r="s4" data-cell="F2"');
+  if(mode!=='one'){
+    f+='<span>,</span>'+seg('s2','B2:B13','data-r="s2" data-range="B2:B13"');
+    f+='<span>,</span>'+seg('s4','F3','data-r="s4" data-cell="F3"');
+  }
+  f+='<span>)</span>';
+  flEl.innerHTML=f;
+}
+function rangeCells(rg){
+  const m=/^([A-Z])(\d+):([A-Z])(\d+)$/.exec(rg);const out=[];
+  if(!m)return out;
+  for(let c=m[1].charCodeAt(0);c<=m[3].charCodeAt(0);c++)
+    for(let r=+m[2];r<=+m[4];r++){const el=cel[String.fromCharCode(c)+r];if(el)out.push(el)}
+  return out;
+}
+let hlState=null;
+function clearHL(){if(!hlState)return;hlState.segs.forEach(s=>s.classList.remove('seg-hi'));hlState.cells.forEach(c=>c.classList.remove('rgs1','rgs2','pop'));hlState=null}
+function hlSeg(s){
+  clearHL();if(!s)return;
+  const cells=[];
+  if(s.dataset.range)cells.push(...rangeCells(s.dataset.range));
+  if(s.dataset.cell&&cel[s.dataset.cell])cells.push(cel[s.dataset.cell]);
+  const cls=s.dataset.r==='s2'?'rgs2':'rgs1';
+  cells.forEach(c=>c.classList.add(s.dataset.cell?'pop':cls));
+  s.classList.add('seg-hi');hlState={segs:[s],cells};
+}
+flEl.addEventListener('mouseover',e=>{const s=e.target.closest('.seg');if(s)hlSeg(s)});
+flEl.addEventListener('mouseout',e=>{const s=e.target.closest('.seg');if(s)clearHL()});
+R.querySelectorAll('.lg').forEach(lg=>{
+  lg.addEventListener('mouseenter',()=>{
+    clearHL();const role=lg.dataset.lg,segs=[].slice.call(flEl.querySelectorAll('.seg[data-r="'+role+'"]')),cells=[];
+    if(role==='s3'){if(cel.F4)cells.push(cel.F4)}
+    segs.forEach(s=>{s.classList.add('seg-hi');if(s.dataset.range)cells.push(...rangeCells(s.dataset.range));if(s.dataset.cell&&cel[s.dataset.cell])cells.push(cel[s.dataset.cell])});
+    const cls=role==='s2'?'rgs2':'rgs1';
+    cells.forEach(c=>c.classList.add(cls));
+    if(cells.length)hlState={segs,cells};
+  });
+  lg.addEventListener('mouseleave',clearHL);
+});
+
+/* 求值步骤：逐行 条件1→条件2→全过累加（与 SUMIFS 语义一致；条件间不分先后，动画按 1→2 顺序演示） */
+function flashStep(){return async my=>{flEl.classList.remove('flash');void flEl.offsetWidth;flEl.classList.add('flash');narr('先看一眼公式本身：求和区域打头，条件一对一对跟在后面');await sleep(950*SL,my);flEl.classList.remove('flash')}}
+function rowPass(r,d,acc,prev,useC2){
+  return async my=>{
+    narr('第'+r+'行：门店「'+d[0]+'」对比条件「'+cel['F2'].textContent+'」');
+    probe.classList.remove('good','bad');
+    probeTo(cel['A'+r]);cel['A'+r].classList.add('cmp');cel['F2'].classList.add('pop');
+    await sleep(320*SL,my);
+    cel['A'+r].classList.remove('cmp');cel['F2'].classList.remove('pop');
+    cel['A'+r].classList.add('hitmark');probe.classList.add('good');
+    await sleep(110*SL,my);
+    if(useC2){
+      narr('第'+r+'行：门店 ✓，再看品类「'+d[1]+'」对比「'+cel['F3'].textContent+'」');
+      probeTo(cel['B'+r]);cel['B'+r].classList.add('cmp');cel['F3'].classList.add('pop');
+      await sleep(300*SL,my);
+      cel['B'+r].classList.remove('cmp');cel['F3'].classList.remove('pop');
+      cel['B'+r].classList.add('hitmark');
+    }else{
+      cel['B'+r].classList.add('dimc');
+    }
+    await sleep(110*SL,my);
+    narr('第'+r+'行：条件全过 → 累加 '+d[2]+'，累计 '+acc);
+    await fly(cel['C'+r],cel['F4'],'+'+d[2],my);
+    await rollTo(cel['F4'],prev,acc,my);
+  };
+}
+function rowFail(r,d,ok1,useC2){
+  return async my=>{
+    probe.classList.remove('good','bad');
+    probeTo(cel['A'+r]);cel['A'+r].classList.add('cmp');cel['F2'].classList.add('pop');
+    await sleep(300*SL,my);
+    cel['A'+r].classList.remove('cmp');cel['F2'].classList.remove('pop');
+    if(!ok1){
+      probe.classList.add('bad');cel['B'+r].classList.add('dimc');cel['C'+r].classList.add('dimc');
+      narr('第'+r+'行：'+d[0]+' ≠ '+cel['F2'].textContent+'，整行跳过');
+      await sleep(260*SL,my);probe.classList.remove('bad');return;
+    }
+    cel['A'+r].classList.add('hitmark');probe.classList.add('good');
+    if(useC2){
+      narr('第'+r+'行：门店 ✓，品类「'+d[1]+'」没通过条件「'+cel['F3'].textContent+'」，跳过');
+      probeTo(cel['B'+r]);cel['B'+r].classList.add('cmp');cel['F3'].classList.add('pop');
+      await sleep(280*SL,my);
+      cel['B'+r].classList.remove('cmp');cel['F3'].classList.remove('pop');
+      probe.classList.add('bad');cel['C'+r].classList.add('dimc');
+      await sleep(260*SL,my);probe.classList.remove('bad');
+    }else{
+      cel['B'+r].classList.add('dimc');cel['C'+r].classList.add('dimc');
+      await sleep(140*SL,my);
+    }
+  };
+}
+function buildSteps(){
+  const st=[];
+  st.push(flashStep());
+  if(mode==='short'){
+    st.push(async my=>{narr('先量一量各区域的行数：求和区域 C2:C11');rangeCells('C2:C11').forEach(c=>c.classList.add('rgs1'));probeTo(cel['C2']);await sleep(750,my)});
+    st.push(async my=>{narr('条件区域 A2:A13 却有 12 行');rangeCells('A2:A13').forEach(c=>c.classList.add('rgs2'));await sleep(750,my)});
+    st.push(async my=>{narr('第 12、13 行有条件、却没有对应的求和格');cel['A12'].classList.add('miss');cel['A13'].classList.add('miss');await sleep(750,my)});
+    st.push(async my=>{probeTo(cel['F4']);gbox.classList.add('shake');cel['F4'].textContent='#VALUE!';cel['F4'].classList.add('err');narr('SUMIFS 要求所有区域行数一致 → #VALUE!。修法：把 C2:C11 改回 C2:C13（自动扩展是 SUMIF 的老行为，别记混）','err');await sleep(1000,my)});
+    return st;
+  }
+  const useC2=mode!=='one';
+  let prev=0;
+  for(let i=0;i<N;i++){
+    const r=i+2,d=DATA[i],ok1=d[0]===cel['F2'].textContent;
+    const ok2=useC2?critMatch(d[1]):false;
+    if(ok1&&(!useC2||ok2)){const p=prev,acc=prev+d[2];prev=acc;st.push(rowPass(r,d,acc,p,useC2))}
+    else st.push(rowFail(r,d,ok1,useC2));
+  }
+  const total=prev;
+  st.push(async my=>{
+    probe.classList.remove('on');
+    cel['F4'].textContent=String(total);
+    cel['F4'].classList.add('okflash');
+    if(mode==='wild')narr('合计 '+total+' —— 比全等写法「衬衫」的 690 多 180，多的是西湖店那件衬衫裙','warn');
+    else if(mode==='one')narr('合计 '+total+' —— 只按门店一刀切，'+cel['F2'].textContent+' 的行全都要','ok');
+    else narr('合计 '+total+' —— '+cel['F2'].textContent+' × '+cel['F3'].textContent+'。想连衬衫裙一起算？看实验区','ok');
+    await sleep(500*SL,my);
+  });
+  return st;
+}
+function clearTransient(){
+  R.querySelectorAll('.cmp,.dimc,.hitmark,.pop,.okflash,.miss,.rgs1,.rgs2').forEach(el=>el.classList.remove('cmp','dimc','hitmark','pop','okflash','miss','rgs1','rgs2'));
+  probe.classList.remove('on','bad','good');chipfly.classList.remove('on');gbox.classList.remove('shake');flEl.classList.remove('flash');
+}
+function clearResult(){cel['F4'].textContent='';cel['F4'].classList.remove('err','okflash')}
+function prefill(){const v=computeVal();cel['F4'].textContent=v.t;cel['F4'].classList.toggle('err',!!v.e)}
+function syncExpBtns(){expBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===mode)))}
+function syncFormulaState(){
+  cel['F2'].textContent=critStore;
+  cel['F3'].textContent=(mode==='wild')?'衬衫*':'衬衫';
+  cel['F3'].classList.toggle('unused',mode==='one');
+  cmpcard.hidden=(mode!=='wild');
+  syncExpBtns();renderFormula();
+}
+function resetAndRun(){clearTimeout(idleTimer);token++;clearTransient();clearResult();steps=buildSteps();stepIdx=0;runLoop()}
+function runLoop(){const my=++token;running=true;playBtn.disabled=true;(async()=>{try{while(stepIdx<steps.length){await steps[stepIdx++](my)}}catch(e){if(e!==0)console.error(e)}finally{if(my===token){running=false;playBtn.disabled=false;if(stepIdx>=steps.length)scheduleAutoReset()}}})()}
+function scheduleAutoReset(){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{if(running)return;resetToDefault('已自动还原')},10000)}
+function resetToDefault(msg){
+  clearTimeout(idleTimer);token++;running=false;playBtn.disabled=false;
+  mode='two';critStore='西湖店';
+  syncFormulaState();clearHL();clearTransient();clearResult();
+  steps=[];stepIdx=0;prefill();narr(msg);
+}
+playBtn.addEventListener('click',resetAndRun);
+stepBtn.addEventListener('click',()=>{
+  clearTimeout(idleTimer);
+  if(running){token++;running=false;playBtn.disabled=false;clearTransient()}
+  if(stepIdx>=steps.length){clearTransient();clearResult();steps=buildSteps();stepIdx=0}
+  chipfly.classList.remove('on');gbox.classList.remove('shake');
+  const my=++token;(async()=>{try{await steps[stepIdx++](my)}catch(e){if(e!==0)console.error(e)}})();
+});
+resetBtn.addEventListener('click',()=>resetToDefault('已还原默认公式'));
+/* 实验档：切换时其他参数归位（门店条件回西湖店），并重放 */
+expBtns.forEach(b=>b.addEventListener('click',()=>{
+  clearTimeout(idleTimer);
+  mode=b.dataset.m;critStore='西湖店';
+  syncFormulaState();clearHL();clearTransient();clearResult();prefill();
+  resetAndRun();
+}));
+/* 点表格行：把门店条件换成该行门店并重放（A 格可 Tab 聚焦） */
+for(let r=2;r<=LAST;r++){
+  const store=DATA[r-2][0];
+  const cells=[cel['A'+r],cel['B'+r],cel['C'+r]];
+  cells.forEach((c,idx)=>{
+    if(idx===0){c.setAttribute('tabindex','0');c.setAttribute('role','button');c.setAttribute('aria-label','把门店条件设为 '+store+' 并演示')}
+    c.addEventListener('click',()=>{clearTimeout(idleTimer);critStore=store;cel['F2'].textContent=store;prefill();resetAndRun()});
+    if(idx===0)c.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();c.click()}});
+  });
+}
+prefill();
+const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
+})();
+</script>
+<script>
+/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
+(function(){
+  var el=document.getElementById('uv-count');
+  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
+  var PAGE_ID='tutorials/sumifs';
+  try{
+    var v=localStorage.getItem('h2e_vid');
+    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
+    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
+      .then(function(r){return r.json()})
+      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
