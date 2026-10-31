@@ -6,70 +6,377 @@
 <title>how-to-excel · 会动的 Excel 函数讲解</title>
 <style>
 :root{color-scheme:light}
+*{box-sizing:border-box}
 body{margin:0;background:#faf8f4;color:#2b2723;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
-.wrap{max-width:720px;margin:0 auto;padding:48px 20px 64px}
+.wrap{max-width:1280px;margin:0 auto;padding:44px 28px 64px}
+
+/* ---- 头部：标题左对齐，右上角筛选 + 分享 ---- */
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 .tag{font-family:Consolas,monospace;font-size:13px;color:#6d6759;letter-spacing:1px}
-h1{margin:6px 0 10px;font-size:30px;font-weight:600}
-.sub{margin:0 0 36px;color:#6d6759;font-size:15px;line-height:1.7}
-.list{display:flex;flex-direction:column;gap:14px}
-a.card{display:block;text-decoration:none;color:inherit;background:#fffdf9;border:1px solid #e5dfd1;border-radius:12px;padding:18px 20px;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+h1{margin:6px 0 10px;font-size:30px;font-weight:600;text-align:left}
+.sub{margin:0;color:#6d6759;font-size:15px;line-height:1.7;max-width:620px}
+.head-actions{display:flex;gap:8px;flex-shrink:0;padding-top:2px}
+.hbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fffdf9;border:1px solid #e5dfd1;border-radius:10px;font-size:13px;color:#4a453d;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease}
+.hbtn:hover{border-color:#217346;color:#217346}
+.hbtn.on{border-color:#217346;color:#217346;background:#eef6f0}
+.hbtn svg{width:15px;height:15px;flex-shrink:0}
+
+/* ---- 搜索条 ---- */
+.searchbar{display:flex;align-items:center;gap:12px;margin-top:20px}
+.searchbar[hidden]{display:none}
+.searchbar input{flex:1;max-width:420px;padding:9px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9;font-size:14px;color:#2b2723;outline:none;transition:border-color .2s ease}
+.searchbar input:focus{border-color:#217346}
+.qcount{font-family:Consolas,monospace;font-size:12.5px;color:#6d6759;white-space:nowrap}
+
+/* ---- 5×5 卡片网格 ---- */
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:22px}
+a.card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#fffdf9;border:1px solid #e5dfd1;border-radius:12px;padding:16px 16px 14px;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
 a.card:hover{border-color:#217346;box-shadow:0 6px 18px rgba(31,27,18,.08);transform:translateY(-2px)}
-.card .fn{font-family:Consolas,monospace;font-size:17px;font-weight:600;color:#217346}
-.card .desc{margin:6px 0 10px;font-size:13.5px;line-height:1.7;color:#4a453d}
-.card .chips{display:flex;flex-wrap:wrap;gap:6px}
-.card .chip{font-size:11.5px;color:#186a3e;background:#eef6f0;border:1px solid #cfe7d8;border-radius:999px;padding:2px 10px}
-.card .go{margin-top:10px;font-size:13px;color:#217346}
-.more{margin-top:26px;font-size:13px;color:#6d6759}
+.card .fn{font-family:Consolas,monospace;font-size:16px;font-weight:600;color:#217346;word-break:break-all}
+.card .desc{margin:6px 0 10px;font-size:12.5px;line-height:1.65;color:#4a453d;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.card .chips{display:flex;flex-wrap:wrap;gap:5px}
+.card .chip{font-size:10.5px;color:#186a3e;background:#eef6f0;border:1px solid #cfe7d8;border-radius:999px;padding:1px 8px}
+.card .go{margin-top:auto;padding-top:12px;font-size:12.5px;color:#217346}
+.empty{margin-top:22px;padding:44px 20px;text-align:center;border:1px dashed #ddd6c8;border-radius:12px;color:#6d6759;font-size:13.5px}
+.empty button{margin-left:10px;padding:5px 12px;border:1px solid #e5dfd1;border-radius:8px;background:#fffdf9;color:#217346;font-size:12.5px;cursor:pointer}
+.empty button:hover{border-color:#217346}
+
+/* ---- 分页：右下角 ---- */
+.pager{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:18px}
+.pager .pgbtn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5dfd1;border-radius:8px;background:#fffdf9;color:#4a453d;font-size:16px;line-height:1;cursor:pointer;transition:border-color .2s ease,color .2s ease}
+.pager .pgbtn:disabled{opacity:.35;cursor:default}
+.pager .pgbtn:not(:disabled):hover{border-color:#217346;color:#217346}
+.pager .pglabel{font-family:Consolas,monospace;font-size:13px;color:#6d6759;min-width:52px;text-align:center}
+.more{margin:26px 0 0;font-size:13px;color:#6d6759}
 footer{margin-top:40px;padding-top:16px;border-top:1px dashed #ddd6c8;font-size:12.5px;color:#6d6759}
 footer a{color:#217346;text-decoration:none}
 .uvnum{margin:10px 0 0;font-family:Consolas,monospace;font-size:11.5px;color:#a09a8d;letter-spacing:.1em}
 .uvnum:empty{display:none}
+
+/* ---- 分享面板（博客分享图同款） ---- */
+.share-layer{position:fixed;inset:0;z-index:50;background:rgba(20,17,12,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+.share-layer[hidden]{display:none}
+.share-panel{display:flex;flex-direction:column;background:#2b2723;border-radius:14px;padding:10px;max-width:min(92vw,470px);max-height:92vh;overflow:hidden}
+.share-imgwrap{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.share-imgwrap img{max-width:100%;max-height:100%;border-radius:6px;display:block}
+.share-actions{display:flex;align-items:center;gap:8px;padding:10px 4px 2px}
+.share-actions button{white-space:nowrap;flex-shrink:0;height:32px;display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.28);background:transparent;color:#f5f1e8;border-radius:8px;padding:0 12px;font-size:13px;line-height:1;cursor:pointer;transition:border-color .2s ease,color .2s ease}
+.share-actions button:hover{border-color:#c4a77d;color:#c4a77d}
+.share-tip{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:rgba(245,241,232,.65)}
+
+/* ---- 响应式降列 ---- */
+@media (max-width:1180px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:920px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:680px){.grid{grid-template-columns:repeat(2,1fr)}.hbtn .txt{display:none}.hbtn{padding:8px 10px}}
+@media (max-width:440px){.grid{grid-template-columns:1fr}}
 @media (max-width:480px){h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="tag">how-to-excel</div>
-  <h1>会动的 Excel 函数讲解</h1>
-  <p class="sub">每个函数一页：动画演它真实怎么执行，参数随便改、故意改错看它翻车——比背口诀记得牢。</p>
-  <div class="list">
-    <a class="card" href="./vlookup/">
-      <div class="fn">VLOOKUP</div>
-      <p class="desc">两张表对不上：这张有编码没售价，那张有编码有售价。动画看它逐行比对、命中取值，再把参数改错，看它当场翻给你看。</p>
-      <div class="chips"><span class="chip">探针扫描动画</span><span class="chip">为什么实验区</span><span class="chip">#N/A 现场排查</span></div>
-      <div class="go">打开演示 →</div>
-    </a>
-    <a class="card" href="./sumproduct/">
-      <div class="fn">SUMPRODUCT</div>
-      <p class="desc">只有数量、单价两列，想知道今天卖了多少钱。动画看它两列逐行配对相乘、乘积逐笔飞进合计格；再故意错位、少选一行、混入文字，看它算错和翻车的三种姿势。</p>
-      <div class="chips"><span class="chip">双探针配对</span><span class="chip">乘积滚动累计</span><span class="chip">逗号 vs 乘号</span></div>
-      <div class="go">打开演示 →</div>
-    </a>
-    <a class="card" href="./address/">
-      <div class="fn">ADDRESS</div>
-      <p class="desc">公式里要用某个格子，位置却要算了才知道。动画看它把行号列号当场拼成合法地址——列号过 26 怎么进位、四个锁定档怎么加 $、R1C1 方括号什么意思；再输 0 或 16385，看它当场报错。</p>
-      <div class="chips"><span class="chip">列号进位机</span><span class="chip">F4 四档锁定</span><span class="chip">R1C1 方括号</span></div>
-      <div class="go">打开演示 →</div>
-    </a>
-    <a class="card" href="./indirect/">
-      <div class="fn">INDIRECT</div>
-      <p class="desc">一段文本就能当地址用：动画看它把「三月!C5」当场翻译成真地址，顺着表名翻到那张表把值取回来。写死和现拼差在哪、R1C1 文本为什么要带 FALSE，最后插一行，看它怎么悄悄取错数。</p>
-      <div class="chips"><span class="chip">文本变地址</span><span class="chip">现拼不写死</span><span class="chip">插行不联动</span></div>
-      <div class="go">打开演示 →</div>
-    </a>
-    <a class="card" href="./sumifs/">
-      <div class="fn">SUMIFS</div>
-      <p class="desc">想按门店、按品类各算各的合计。动画看它逐行过筛——两个条件都过的行，金额才飞进合计格滚动累加；再增减条件、把品类写成「衬衫*」、把求和区域少选两行，看它多算、少算和报错分别发生在什么时候。</p>
-      <div class="chips"><span class="chip">逐行过筛</span><span class="chip">滚动累计</span><span class="chip">区域错位 #VALUE!</span></div>
-      <div class="go">打开演示 →</div>
-    </a>
+  <header class="top">
+    <div class="head-left">
+      <div class="tag">how-to-excel</div>
+      <h1>会动的 Excel 函数讲解</h1>
+      <p class="sub">每个函数一页：动画演它真实怎么执行，参数随便改、故意改错看它翻车——比背口诀记得牢。</p>
+    </div>
+    <div class="head-actions">
+      <button class="hbtn" id="btnFilter" aria-expanded="false" aria-controls="searchbar" title="搜索已发布的函数">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z"/></svg>
+        <span class="txt">筛选</span>
+      </button>
+      <button class="hbtn" id="btnShare" title="生成分享图">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg>
+        <span class="txt">分享</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="searchbar" id="searchbar" hidden>
+    <input id="q" type="search" placeholder="搜索函数名 / 场景 / 特性" autocomplete="off">
+    <span class="qcount" id="qcount"></span>
   </div>
-  <p class="more">更多函数排片中：XLOOKUP · IF · SUMIF</p>
+
+  <main>
+    <section class="grid" id="grid" aria-live="polite"></section>
+    <div class="empty" id="empty" hidden>没有匹配的函数<button id="btnClear" type="button">清除搜索</button></div>
+    <nav class="pager" id="pager" aria-label="分页">
+      <button class="pgbtn" id="pgPrev" type="button" aria-label="上一页">‹</button>
+      <span class="pglabel" id="pgLabel">1 / 1</span>
+      <button class="pgbtn" id="pgNext" type="button" aria-label="下一页">›</button>
+    </nav>
+    <p class="more">更多函数排片中：XLOOKUP · IF · SUMIF</p>
+    <noscript><p class="more">函数列表需要启用 JavaScript 显示。</p></noscript>
+  </main>
+
   <footer>托管于 GitHub Pages · <a href="https://github.com/benyichan/how-to-excel">源码仓库</a></footer>
   <p class="uvnum" id="uv-count"></p>
 </div>
+
+<!-- 分享图弹层 -->
+<div class="share-layer" id="shareLayer" hidden>
+  <div class="share-panel" role="dialog" aria-modal="true" aria-label="分享图预览">
+    <div class="share-imgwrap"><img id="shareImg" alt="分享图预览"></div>
+    <div class="share-actions">
+      <button id="shSave" type="button">保存图片</button>
+      <button id="shCopy" type="button">复制图片</button>
+      <span class="share-tip" id="shTip">移动端可长按图片保存</span>
+      <button id="shClose" type="button" aria-label="关闭">✕</button>
+    </div>
+  </div>
+</div>
+
+<script src="./qrcode.min.js"></script>
 <script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
+/* ---------- 数据：新增函数页时在此加一条即可 ---------- */
+var FNS=[
+  {name:'VLOOKUP',path:'vlookup',desc:'两张表对不上：这张有编码没售价，那张有编码有售价。动画看它逐行比对、命中取值，再把参数改错，看它当场翻给你看。',chips:['探针扫描动画','为什么实验区','#N/A 现场排查']},
+  {name:'SUMPRODUCT',path:'sumproduct',desc:'只有数量、单价两列，想知道今天卖了多少钱。动画看它两列逐行配对相乘、乘积逐笔飞进合计格；再故意错位、少选一行、混入文字，看它算错和翻车的三种姿势。',chips:['双探针配对','乘积滚动累计','逗号 vs 乘号']},
+  {name:'ADDRESS',path:'address',desc:'公式里要用某个格子，位置却要算了才知道。动画看它把行号列号当场拼成合法地址——列号过 26 怎么进位、四个锁定档怎么加 $、R1C1 方括号什么意思；再输 0 或 16385，看它当场报错。',chips:['列号进位机','F4 四档锁定','R1C1 方括号']},
+  {name:'INDIRECT',path:'indirect',desc:'一段文本就能当地址用：动画看它把「三月!C5」当场翻译成真地址，顺着表名翻到那张表把值取回来。写死和现拼差在哪、R1C1 文本为什么要带 FALSE，最后插一行，看它怎么悄悄取错数。',chips:['文本变地址','现拼不写死','插行不联动']},
+  {name:'SUMIFS',path:'sumifs',desc:'想按门店、按品类各算各的合计。动画看它逐行过筛——两个条件都过的行，金额才飞进合计格滚动累加；再增减条件、把品类写成「衬衫*」、把求和区域少选两行，看它多算、少算和报错分别发生在什么时候。',chips:['逐行过筛','滚动累计','区域错位 #VALUE!']}
+];
+
+var PAGE_SIZE=25;
+var state={q:'',page:1};
+var REDUCE=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var grid=document.getElementById('grid');
+var emptyEl=document.getElementById('empty');
+var pagerEl=document.getElementById('pager');
+var pgPrev=document.getElementById('pgPrev');
+var pgNext=document.getElementById('pgNext');
+var pgLabel=document.getElementById('pgLabel');
+var searchbar=document.getElementById('searchbar');
+var qInput=document.getElementById('q');
+var qcount=document.getElementById('qcount');
+var btnFilter=document.getElementById('btnFilter');
+var btnClear=document.getElementById('btnClear');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function filtered(){
+  if(!state.q)return FNS;
+  var t=state.q.toLowerCase();
+  return FNS.filter(function(f){
+    return (f.name+' '+f.desc+' '+f.chips.join(' ')).toLowerCase().indexOf(t)>-1;
+  });
+}
+
+function render(){
+  var list=filtered();
+  var pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+  if(state.page>pages)state.page=pages;
+  if(state.page<1)state.page=1;
+  var slice=list.slice((state.page-1)*PAGE_SIZE,state.page*PAGE_SIZE);
+  grid.innerHTML=slice.map(function(f){
+    return '<a class="card" href="./'+esc(f.path)+'/">'
+      +'<div class="fn">'+esc(f.name)+'</div>'
+      +'<p class="desc">'+esc(f.desc)+'</p>'
+      +'<div class="chips">'+f.chips.map(function(c){return '<span class="chip">'+esc(c)+'</span>'}).join('')+'</div>'
+      +'<div class="go">打开演示 →</div>'
+      +'</a>';
+  }).join('');
+  emptyEl.hidden=slice.length>0;
+  pgPrev.disabled=state.page<=1;
+  pgNext.disabled=state.page>=pages;
+  pgLabel.textContent=state.page+' / '+pages;
+  pagerEl.style.display=(pages<=1&&list.length===0)?'none':'flex';
+  qcount.textContent=state.q?(list.length+' 个结果'):'';
+}
+
+function scrollToGrid(){
+  grid.scrollIntoView({behavior:REDUCE?'auto':'smooth',block:'start'});
+}
+
+pgPrev.addEventListener('click',function(){state.page--;render();scrollToGrid()});
+pgNext.addEventListener('click',function(){state.page++;render();scrollToGrid()});
+
+/* ---------- 筛选器 ---------- */
+btnFilter.addEventListener('click',function(){
+  var open=searchbar.hidden;
+  searchbar.hidden=!open;
+  btnFilter.classList.toggle('on',open);
+  btnFilter.setAttribute('aria-expanded',String(open));
+  if(open){qInput.focus()}
+  else{qInput.value='';state.q='';state.page=1;render()}
+});
+qInput.addEventListener('input',function(){state.q=qInput.value.trim();state.page=1;render()});
+qInput.addEventListener('keydown',function(e){if(e.key==='Escape')closeSearch()});
+btnClear.addEventListener('click',function(){qInput.value='';state.q='';state.page=1;render();qInput.focus()});
+function closeSearch(){
+  searchbar.hidden=true;
+  btnFilter.classList.remove('on');
+  btnFilter.setAttribute('aria-expanded','false');
+  qInput.value='';state.q='';state.page=1;render();
+}
+
+/* ---------- 分享图（博客分享图同款构图：纸噪点/细边框/居中品牌头/卷别行/标题/摘录/底部条 QR168） ---------- */
+var shareLayer=document.getElementById('shareLayer');
+var shareImg=document.getElementById('shareImg');
+var shTip=document.getElementById('shTip');
+var shareCanvas=null;
+var TIP_DEFAULT='移动端可长按图片保存';
+
+function wrapText(ctx,text,maxWidth,maxLines){
+  var lines=[],line='';
+  for(var i=0;i<text.length;i++){
+    var test=line+text[i];
+    if(ctx.measureText(test).width>maxWidth&&line){
+      lines.push(line);line=text[i];
+      if(lines.length===maxLines)break;
+    }else{line=test}
+  }
+  if(lines.length<maxLines&&line)lines.push(line);
+  if(lines.length===maxLines){
+    var last=lines[maxLines-1];
+    if(last&&i<text.length){
+      while(last&&ctx.measureText(last+'…').width>maxWidth)last=last.slice(0,-1);
+      lines[maxLines-1]=last+'…';
+    }
+  }
+  return lines;
+}
+
+function makeQRCanvas(text,size){
+  if(typeof QRCode==='undefined')return null;
+  var holder=document.createElement('div');
+  new QRCode(holder,{text:text,width:size,height:size,colorDark:'#2b2723',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  return holder.querySelector('canvas');
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+
+function drawShare(){
+  var W=750,H=1000;
+  var c=document.createElement('canvas');c.width=W;c.height=H;
+  var x=c.getContext('2d');
+  var SERIF='"Noto Serif SC","Source Han Serif SC","STSong","SimSun",serif';
+  var MONO='Consolas,monospace';
+
+  /* 纸底 + 噪点（确定性伪随机，两次渲染构图一致） */
+  x.fillStyle='#faf8f4';x.fillRect(0,0,W,H);
+  var seed=42;
+  function rnd(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff}
+  x.fillStyle='rgba(43,39,35,.05)';
+  for(var i=0;i<900;i++){x.fillRect(Math.floor(rnd()*W),Math.floor(rnd()*H),1.4,1.4)}
+
+  /* 细边框双线 */
+  x.strokeStyle='rgba(43,39,35,.5)';x.lineWidth=2;x.strokeRect(28,28,W-56,H-56);
+  x.strokeStyle='rgba(43,39,35,.16)';x.lineWidth=1;x.strokeRect(40,40,W-80,H-80);
+
+  /* 居中品牌头 + 卷别行 */
+  x.textAlign='center';x.textBaseline='alphabetic';
+  x.fillStyle='#2b2723';x.font='600 24px '+MONO;
+  x.fillText('h o w - t o - e x c e l',W/2,124);
+  x.fillStyle='#6d6759';x.font='13px '+MONO;
+  x.fillText('已收录 '+FNS.length+' 讲',W/2,158);
+  x.strokeStyle='#ddd6c8';x.lineWidth=1;
+  x.beginPath();x.moveTo(W/2-24,184);x.lineTo(W/2+24,184);x.stroke();
+
+  /* 标题 + 摘录 */
+  x.textAlign='left';
+  var CX=84,CW=W-168;
+  x.fillStyle='#2b2723';x.font='600 46px '+SERIF;
+  x.fillText('会动的 Excel 函数讲解',CX,262);
+  x.fillStyle='#4a453d';x.font='20px '+SERIF;
+  var excerpt=wrapText(x,'每个函数一页：动画演它真实怎么执行，参数随便改、故意改错看它翻车——比背口诀记得牢。',CW,5);
+  var ey=308;
+  excerpt.forEach(function(ln){x.fillText(ln,CX,ey);ey+=36});
+
+  /* 本期目录 */
+  x.fillStyle='#217346';x.fillRect(CX,456,8,8);
+  x.fillStyle='#6d6759';x.font='13px '+MONO;
+  x.fillText('本 期 目 录',CX+18,464);
+  var brief={VLOOKUP:'逐行比对命中取值',SUMPRODUCT:'两列配对相乘求和',ADDRESS:'行列号拼合法地址',INDIRECT:'文本地址跨表取值',SUMIFS:'多条件逐行过筛求和'};
+  var fy=510;
+  FNS.forEach(function(f){
+    x.fillStyle='#217346';x.font='600 22px '+MONO;
+    x.fillText(f.name,CX,fy);
+    var wname=x.measureText(f.name).width;
+    x.fillStyle='#4a453d';x.font='17px '+SERIF;
+    x.fillText('·  '+brief[f.name],CX+wname+14,fy);
+    fy+=50;
+  });
+
+  /* 底部条：QR 白卡 + 扫码文案 + 站名（同款 QR168） */
+  x.strokeStyle='#ddd6c8';x.lineWidth=1;
+  x.beginPath();x.moveTo(CX,742);x.lineTo(W-CX,742);x.stroke();
+  var qc=makeQRCanvas('https://benyichan.github.io/how-to-excel/',168);
+  if(qc){
+    roundRect(x,CX-6,766,180,180,10);
+    x.fillStyle='#fffdf9';x.fill();
+    x.strokeStyle='rgba(43,39,35,.25)';x.lineWidth=1;x.stroke();
+    x.drawImage(qc,CX,772,168,168);
+    x.fillStyle='#2b2723';x.font='600 34px '+SERIF;
+    x.fillText('扫码打开讲解',CX+204,838);
+    x.fillStyle='#6d6759';x.font='22px '+MONO;
+    x.fillText('how-to-excel',CX+206,886);
+  }else{
+    x.fillStyle='#2b2723';x.font='600 34px '+SERIF;
+    x.fillText('benyichan.github.io/how-to-excel',CX,856);
+  }
+  return c;
+}
+
+function flashTip(msg){
+  shTip.textContent=msg;
+  clearTimeout(flashTip._t);
+  flashTip._t=setTimeout(function(){shTip.textContent=TIP_DEFAULT},2200);
+}
+
+function openShare(){
+  if(!shareCanvas){
+    try{shareCanvas=drawShare()}
+    catch(e){flashTip('分享图生成失败');return}
+    shareImg.src=shareCanvas.toDataURL('image/png');
+  }
+  shareLayer.hidden=false;
+}
+function closeShare(){shareLayer.hidden=true}
+
+document.getElementById('btnShare').addEventListener('click',openShare);
+document.getElementById('shClose').addEventListener('click',closeShare);
+shareLayer.addEventListener('click',function(e){if(e.target===shareLayer)closeShare()});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  if(!shareLayer.hidden){closeShare()}
+  else if(!searchbar.hidden){closeSearch()}
+});
+
+/* 三出口：保存 / 复制（ClipboardItem 的位图 promise 须在用户手势同步栈内开始） */
+document.getElementById('shSave').addEventListener('click',function(){
+  if(!shareCanvas)return;
+  shareCanvas.toBlob(function(b){
+    if(!b){flashTip('保存失败');return}
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download='how-to-excel-分享图.png';
+    a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},4000);
+    flashTip('已保存');
+  },'image/png');
+});
+document.getElementById('shCopy').addEventListener('click',function(){
+  if(!shareCanvas)return;
+  try{
+    if(!navigator.clipboard||typeof ClipboardItem==='undefined')throw new Error('no-clipboard');
+    var item=new ClipboardItem({'image/png':new Promise(function(res){shareCanvas.toBlob(res,'image/png')})});
+    navigator.clipboard.write([item]).then(
+      function(){flashTip('已复制，可直接粘贴')},
+      function(){flashTip('复制失败，请用保存图片')}
+    );
+  }catch(e){flashTip('当前浏览器不支持复制，请用保存图片')}
+});
+
+render();
+
+/* ---------- UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 ---------- */
 (function(){
   var el=document.getElementById('uv-count');
   var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
