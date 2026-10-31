@@ -10,8 +10,6 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px;color:var(--foreground);font-size:14px;--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;--frame-inset:2px}
 #fn-demo h3{margin:0 0 2px}
 #fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
-#fn-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
-#fn-demo .uvnum:empty{display:none}
 #fn-demo .backlink{color:#6d6759;text-decoration:none}
 #fn-demo .backlink:hover{color:#217346}
 #fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground);line-height:1.65}
@@ -32,6 +30,9 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .seg.s4{background:#188a4c;color:#fff}
 #fn-demo .legend{font-size:11.5px;color:#6f6a5e;padding:5px 12px;border-bottom:1px solid #efe9dc;background:#fbfaf7;display:flex;gap:12px;flex-wrap:wrap}
 #fn-demo .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#fn-demo .legend [data-link]{cursor:pointer;border-radius:4px}
+#fn-demo .legend [data-link]:hover,#fn-demo .legend [data-link]:focus-visible{color:#2b2723;background:#f1ecdf}
+#fn-demo .fl .seg.lghl{outline:2px solid currentColor;outline-offset:1px}
 /* 网格 */
 #fn-demo .grid-scroll{overflow-x:auto;padding:10px 10px 4px}
 #fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
@@ -57,7 +58,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 @keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 /* 覆盖层 */
 #fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
-#fn-demo .probe{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);border:2px solid #fff;box-sizing:border-box;box-shadow:0 1px 6px rgba(37,99,235,.45);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
+#fn-demo .probe{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
 #fn-demo .probe.on{opacity:1}
 #fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c)}
 @keyframes fd-pulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4),0 0 0 2px #fff}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5),0 0 0 2px #fff}}
@@ -150,11 +151,17 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   #fn-demo .sb-lab{min-width:auto}
   #fn-demo .narr{display:flex}
 }
+/* prefers-reduced-motion：只关闭探针呼吸脉动等非必要连续装饰动画；
+   探针位移、进制转换卡、锁定档反馈与全部教学步骤保留（SKILL 验证清单第 7 项） */
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important}
+}
 </style>
 </head>
 <body>
 <div id="fn-demo">
-<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a></div>
 <h3>ADDRESS 是怎么工作的？</h3>
 <p class="sub">公式里要用某个格子，位置却要算了才知道：商品挪一行、插一列，手写的 C5 转眼就指错门。ADDRESS 拿行号和列号当场拼出一个合法地址，位置变了，地址跟着变。</p>
 
@@ -162,11 +169,11 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="xl-title"><span>ADDRESS-动态地址.xlsx</span><span style="opacity:.72;font-size:11px">已自动保存</span></div>
   <div class="xl-ribbon" aria-hidden="true">开始　插入　公式　数据　审阅</div>
   <div class="fx"><span class="name" id="fd-namebox">B8</span><div class="fl" id="fd-fl"></div></div>
-  <div class="legend" aria-hidden="true">
-    <span><i style="background:#2563eb"></i>行号 / 列号</span>
-    <span><i style="background:#7c3aed"></i>表名</span>
-    <span><i style="background:#d97a06"></i>列字母（算出来的）</span>
-    <span><i style="background:#188a4c"></i>锁定与样式（$ 和 R、C）</span>
+  <div class="legend" aria-label="参数颜色图例，可悬停或点击查看对应参数">
+    <span data-link="row col" tabindex="0" role="button"><i style="background:#2563eb"></i>行号 / 列号</span>
+    <span data-link="sheet" tabindex="0" role="button"><i style="background:#7c3aed"></i>表名</span>
+    <span data-link="col" tabindex="0" role="button"><i style="background:#d97a06"></i>列字母（算出来的）</span>
+    <span data-link="abs a1" tabindex="0" role="button"><i style="background:#188a4c"></i>锁定与样式（$ 和 R、C）</span>
   </div>
   <div class="grid-scroll"><div class="grid-box" id="fd-gbox">
     <table class="xlt" id="fd-xlt"></table>
@@ -397,13 +404,21 @@ function renderFx(){
 }
 flEl.addEventListener('mouseover',e=>{const s=e.target.closest('.seg');if(!s)return;const k=knobOf(s.dataset.link);if(k)k.classList.add('klink')});
 flEl.addEventListener('mouseout',e=>{const s=e.target.closest('.seg');if(!s)return;const k=knobOf(s.dataset.link);if(k)k.classList.remove('klink')});
-flEl.addEventListener('click',e=>{const s=e.target.closest('.seg');if(!s)return;narr({
+const SEG_NARR={
   row:'row_num：目标在第几行，1 到 1048576',
   col:'column_num：第几列——1 是 A，26 是 Z，27 就得进位成 AA',
   abs:'abs_num：锁定档，1 全锁、2 锁行、3 锁列、4 全放，跟 F4 循环一个顺序',
   a1:'a1：TRUE 用 A1 样式（字母列），FALSE 用 R1C1 样式（全数字）',
   sheet:'sheet_text：跨表前缀。忘写不报错，默认在当前表取数'
-}[s.dataset.link]||'')});
+};
+flEl.addEventListener('click',e=>{const s=e.target.closest('.seg');if(!s)return;narr(SEG_NARR[s.dataset.link]||'')});
+/* 图例三处联动：悬停/点击图例 → 高亮公式段与对应旋钮（与公式段 hover 同一套联动） */
+const legendEl=R.querySelector('.legend');
+function lgTargets(sp){return sp.dataset.link.split(' ').flatMap(k=>{const seg=[].slice.call(flEl.querySelectorAll('.seg[data-link="'+k+'"]'));const kn=knobOf(k);const out=seg.map(s=>[s,kn]);if(!seg.length&&kn)out.push([null,kn]);return out})}
+legendEl.addEventListener('mouseover',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;lgTargets(sp).forEach(([s,kn])=>{if(s)s.classList.add('lghl');if(kn)kn.classList.add('klink')})});
+legendEl.addEventListener('mouseout',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;lgTargets(sp).forEach(([s,kn])=>{if(s)s.classList.remove('lghl');if(kn)kn.classList.remove('klink')})});
+legendEl.addEventListener('click',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;narr(SEG_NARR[sp.dataset.link.split(' ')[0]]||'')});
+legendEl.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const sp=e.target.closest('[data-link]');if(!sp)return;e.preventDefault();narr(SEG_NARR[sp.dataset.link.split(' ')[0]]||'')});
 function knobOf(k){return{row:rowInput,col:colInput,abs:R.querySelector('#fd-k-abs'),a1:R.querySelector('#fd-k-style'),sheet:R.querySelector('#fd-k-sheet')}[k]}
 
 /* ── 流水线渲染 ── */
@@ -632,22 +647,6 @@ R.querySelector('#fd-gotcha-play').addEventListener('click',()=>{
 /* ── 启动 ── */
 renderGrid();syncInputs();refreshStatic();
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500);
-})();
-</script>
-<script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
-(function(){
-  var el=document.getElementById('uv-count');
-  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
-  var PAGE_ID='tutorials/address';
-  try{
-    var v=localStorage.getItem('h2e_vid');
-    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
-    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
-      .then(function(r){return r.json()})
-      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
-      .catch(function(){});
-  }catch(e){}
 })();
 </script>
 </body>
