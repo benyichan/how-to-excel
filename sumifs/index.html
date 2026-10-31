@@ -120,7 +120,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 <div class="xl">
   <div class="xl-title"><span>订单示例.xlsx</span><span style="opacity:.72;font-size:11px">已自动保存</span></div>
   <div class="xl-ribbon" aria-hidden="true">开始　插入　公式　数据　审阅</div>
-  <div class="fx"><span class="name" id="fd-namebox">F4</span><div class="fl" id="fd-fl"></div></div>
+  <div class="fx"><span class="name" id="fd-namebox">F4</span><div class="fl" id="fd-fl"><span>=</span><span>SUMIFS</span><span>(</span><span class="seg s1" data-r="s1" data-range="C2:C13">C2:C13</span><span>,</span><span class="seg s2" data-r="s2" data-range="A2:A13">A2:A13</span><span>,</span><span class="seg s4" data-r="s4" data-cell="F2">F2</span><span>,</span><span class="seg s2" data-r="s2" data-range="B2:B13">B2:B13</span><span>,</span><span class="seg s4" data-r="s4" data-cell="F3">F3</span><span>)</span></div></div>
   <div class="grid-scroll"><div class="grid-box" id="fd-gbox">
     <table class="xlt" id="fd-xlt"></table>
     <div class="ovl"><div class="probe" id="fd-probe"></div><div class="chipfly" id="fd-chipfly"></div></div>
@@ -410,7 +410,7 @@ for(let r=2;r<=LAST;r++){
     if(idx===0)c.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();c.click()}});
   });
 }
-prefill();
+syncFormulaState();prefill();
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
 })();
 </script>
