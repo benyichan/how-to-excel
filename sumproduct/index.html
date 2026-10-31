@@ -7,130 +7,134 @@
 <style>
 :root{color-scheme:light;--foreground:#2b2723;--muted-foreground:#6d6759;--accent:#d97a06}
 body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
-#sumproduct-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px}
+#fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px}
 </style>
 </head>
 <body>
-<div id="sumproduct-demo">
+<div id="fn-demo">
 <style>
-#sumproduct-demo{--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;color:var(--foreground);font-size:14px}
-#sumproduct-demo h3{margin:0 0 2px}
-#sumproduct-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
-#sumproduct-demo .backlink{color:#6d6759;text-decoration:none}
-#sumproduct-demo .backlink:hover{color:#217346}
-#sumproduct-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
-#sumproduct-demo .uvnum:empty{display:none}
-#sumproduct-demo .sub{margin:0 0 12px;color:var(--muted-foreground);font-size:13.5px;line-height:1.6}
-#sumproduct-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-#sumproduct-demo .tabular-nums{font-variant-numeric:tabular-nums}
+#fn-demo{--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;color:var(--foreground);font-size:14px}
+#fn-demo h3{margin:0 0 2px}
+#fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+#fn-demo .backlink{color:#6d6759;text-decoration:none}
+#fn-demo .backlink:hover{color:#217346}
+#fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground);font-size:13.5px;line-height:1.6}
+#fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#fn-demo .tabular-nums{font-variant-numeric:tabular-nums}
 
 /* ===== 按钮体系（自包含） ===== */
-#sumproduct-demo .btn-p,#sumproduct-demo .btn-s,#sumproduct-demo .exp-btn{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
-#sumproduct-demo .btn-p{background:#217346;border-color:#217346;color:#fff;margin-right:8px}
-#sumproduct-demo .btn-p:disabled{opacity:.55;cursor:default}
-#sumproduct-demo .btn-s{margin-right:8px}
-#sumproduct-demo .exp-btn{margin:0 8px 8px 0}
-#sumproduct-demo .exp-btn.on{border-color:#217346;box-shadow:inset 0 0 0 1px #217346;background:#f3f9f5;color:#186a3e}
+#fn-demo .btn-p,#fn-demo .btn-s,#fn-demo .exp-btn{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
+#fn-demo .btn-p{background:#217346;border-color:#217346;color:#fff;margin-right:8px}
+#fn-demo .btn-p:disabled{opacity:.55;cursor:default}
+#fn-demo .btn-s{margin-right:8px}
+#fn-demo .exp-btn{margin:0 8px 8px 0}
+#fn-demo .exp-btn.on{border-color:#217346;box-shadow:inset 0 0 0 1px #217346;background:#f3f9f5;color:#186a3e}
 
 /* ===== Excel 窗口（产品拟真，固定浅色） ===== */
-#sumproduct-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
-#sumproduct-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
-#sumproduct-demo .xl-title .save{opacity:.72;font-size:11px}
-#sumproduct-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
-#sumproduct-demo .fx{display:flex;align-items:stretch;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
-#sumproduct-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
-#sumproduct-demo .fx .fxl{width:34px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#a09a8d;font-family:Georgia,serif;font-style:italic}
-#sumproduct-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,'Courier New',monospace;white-space:nowrap;overflow-x:auto}
-#sumproduct-demo .seg{border-radius:4px;padding:1px 6px;margin:0 2px;border:1px solid transparent;font-weight:500}
-#sumproduct-demo .s1{background:#2563eb;color:#fff;border-color:#2563eb}
-#sumproduct-demo .s2{background:#7c3aed;color:#fff;border-color:#7c3aed}
-#sumproduct-demo .s3{background:#d97a06;color:#fff;border-color:#d97a06}
-#sumproduct-demo .seg:hover{filter:brightness(.95)}
-#sumproduct-demo .seg.badseg{background:#fde8e8 !important;color:#c0392b !important}
-#sumproduct-demo .fl{transform-origin:left center}
-#sumproduct-demo .fl.flash{animation:sp-fflash .95s ease}
-@keyframes sp-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01);box-shadow:0 0 0 1px rgba(33,115,70,.5)}}
+#fn-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
+#fn-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+#fn-demo .xl-title .save{opacity:.72;font-size:11px}
+#fn-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
+#fn-demo .fx{display:flex;align-items:stretch;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
+#fn-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
+#fn-demo .fx .fxl{width:34px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#a09a8d;font-family:Georgia,serif;font-style:italic}
+#fn-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,'Courier New',monospace;white-space:nowrap;overflow-x:auto}
+#fn-demo .seg{border-radius:4px;padding:1px 6px;margin:0 2px;border:1px solid transparent;font-weight:500}
+#fn-demo .s1{background:#2563eb;color:#fff;border-color:#2563eb}
+#fn-demo .s2{background:#7c3aed;color:#fff;border-color:#7c3aed}
+#fn-demo .s3{background:#d97a06;color:#fff;border-color:#d97a06}
+#fn-demo .seg:hover{filter:brightness(.95)}
+#fn-demo .seg.badseg{background:#fde8e8 !important;color:#c0392b !important}
+#fn-demo .fl{transform-origin:left center}
+#fn-demo .fl.flash{animation:fd-fflash .95s ease}
+@keyframes fd-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01);box-shadow:0 0 0 1px rgba(33,115,70,.5)}}
 
 /* ===== 网格 ===== */
-#sumproduct-demo .grid-scroll{overflow-x:auto;padding:10px}
-#sumproduct-demo .grid-box{position:relative;width:max-content;margin:0 auto}
-#sumproduct-demo table.xlt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
-#sumproduct-demo .xlt th,#sumproduct-demo .xlt td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap;transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
-#sumproduct-demo .xlt .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
-#sumproduct-demo .xlt .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
-#sumproduct-demo .xlt td.h{font-weight:500;color:#45413a;background:#faf8f3}
-#sumproduct-demo .xlt td.num{text-align:right}
-#sumproduct-demo td.fcell.sel{box-shadow:inset 0 0 0 2px #217346;background:#f6fbf8}
-#sumproduct-demo td.fcell.err{color:#d13438;font-weight:500}
-#sumproduct-demo td.fcell.wrongcell{color:#b45309;font-weight:500}
+#fn-demo .grid-scroll{overflow-x:auto;padding:10px}
+#fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
+#fn-demo table.xlt{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+#fn-demo .xlt th,#fn-demo .xlt td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap;transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
+#fn-demo .xlt .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
+#fn-demo .xlt .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
+#fn-demo .xlt td.h{font-weight:500;color:#45413a;background:#faf8f3}
+#fn-demo .xlt td.num{text-align:right}
+#fn-demo td.fcell.sel{box-shadow:inset 0 0 0 2px #217346;background:#f6fbf8}
+#fn-demo td.fcell.err{color:#d13438;font-weight:500}
+#fn-demo td.fcell.wrongcell{color:#b45309;font-weight:500}
 
 /* 参数高亮与运行区域标记 */
-#sumproduct-demo .hl1{background:#e9f0fe !important;box-shadow:inset 0 0 0 2px var(--p1)}
-#sumproduct-demo .hl2{background:#f2ebfd !important;box-shadow:inset 0 0 0 2px var(--p2)}
-#sumproduct-demo .ra1{background:#eef4ff !important}
-#sumproduct-demo .ra2{background:#f6f0ff !important}
+#fn-demo .hl1{background:#e9f0fe !important;box-shadow:inset 0 0 0 2px var(--p1)}
+#fn-demo .hl2{background:#f2ebfd !important;box-shadow:inset 0 0 0 2px var(--p2)}
+#fn-demo .ra1{background:#eef4ff !important}
+#fn-demo .ra2{background:#f6f0ff !important}
 
 /* 动画过程态（短促、事件式） */
-#sumproduct-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
-#sumproduct-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
-#sumproduct-demo .xlt td.okflash{animation:sp-okflash .8s cubic-bezier(.3,1.4,.5,1)}
-@keyframes sp-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:none}}
-#sumproduct-demo .xlt td.warnflash{animation:sp-warnflash .8s cubic-bezier(.3,1.4,.5,1)}
-@keyframes sp-warnflash{0%{background:#ffd9a3;box-shadow:inset 0 0 0 3px #d97a06}55%{background:#ffeeda;box-shadow:inset 0 0 0 2px #d97a06}100%{background:#fff;box-shadow:none}}
-#sumproduct-demo .shake{animation:sp-shake .45s}
-@keyframes sp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+#fn-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
+#fn-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
+#fn-demo .xlt td.okflash{animation:fd-okflash .8s ease}
+@keyframes fd-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:none}}
+#fn-demo .xlt td.warnflash{animation:fd-warnflash .8s ease}
+@keyframes fd-warnflash{0%{background:#ffd9a3;box-shadow:inset 0 0 0 3px #d97a06}55%{background:#ffeeda;box-shadow:inset 0 0 0 2px #d97a06}100%{background:#fff;box-shadow:none}}
+#fn-demo .shake{animation:fd-shake .45s}
+@keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 
 /* 覆盖层动画元素：双探针 + 飞行乘积 */
-#sumproduct-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
-#sumproduct-demo .probe{position:absolute;width:16px;height:16px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0}
-#sumproduct-demo .probe.on{opacity:1}
-#sumproduct-demo .probe.pr1{background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);animation:sp-pulse-b 1.5s ease-in-out infinite}
-#sumproduct-demo .probe.pr2{background:radial-gradient(circle at 35% 35%,#c9a6ff,#7c3aed);animation:sp-pulse-p 1.5s ease-in-out infinite}
-#sumproduct-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c);animation-name:sp-pulse-g}
-#sumproduct-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438);animation-name:sp-pulse-r}
-@keyframes sp-pulse-b{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
-@keyframes sp-pulse-p{0%,100%{box-shadow:0 0 0 4px rgba(124,58,237,.16),0 2px 8px rgba(124,58,237,.4)}50%{box-shadow:0 0 0 7px rgba(124,58,237,.08),0 2px 10px rgba(124,58,237,.5)}}
-@keyframes sp-pulse-g{0%,100%{box-shadow:0 0 0 4px rgba(24,138,76,.18),0 2px 8px rgba(24,138,76,.45)}50%{box-shadow:0 0 0 7px rgba(24,138,76,.10),0 2px 10px rgba(24,138,76,.55)}}
-@keyframes sp-pulse-r{0%,100%{box-shadow:0 0 0 4px rgba(209,52,56,.16),0 2px 8px rgba(209,52,56,.4)}50%{box-shadow:0 0 0 7px rgba(209,52,56,.08),0 2px 10px rgba(209,52,56,.5)}}
-#sumproduct-demo .beam{position:absolute;height:3px;border-radius:2px;background:linear-gradient(90deg,#f2b25c,#d97a06);box-shadow:0 0 10px rgba(217,122,6,.7);transform-origin:left center;transform:scaleX(0);z-index:4;transition:transform .38s ease}
-#sumproduct-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
-#sumproduct-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
+#fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
+#fn-demo .probe{position:absolute;width:22px;height:22px;border-radius:50%;transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0}
+#fn-demo .probe.on{opacity:1}
+#fn-demo .probe.pr1{background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);animation:fd-pulse-b 1.5s ease-in-out infinite}
+#fn-demo .probe.pr2{background:radial-gradient(circle at 35% 35%,#c9a6ff,#7c3aed);animation:fd-pulse-p 1.5s ease-in-out infinite}
+#fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c);animation-name:fd-pulse-g}
+#fn-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438);animation-name:fd-pulse-r}
+@keyframes fd-pulse-b{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
+@keyframes fd-pulse-p{0%,100%{box-shadow:0 0 0 4px rgba(124,58,237,.16),0 2px 8px rgba(124,58,237,.4)}50%{box-shadow:0 0 0 7px rgba(124,58,237,.08),0 2px 10px rgba(124,58,237,.5)}}
+@keyframes fd-pulse-g{0%,100%{box-shadow:0 0 0 4px rgba(24,138,76,.18),0 2px 8px rgba(24,138,76,.45)}50%{box-shadow:0 0 0 7px rgba(24,138,76,.10),0 2px 10px rgba(24,138,76,.55)}}
+@keyframes fd-pulse-r{0%,100%{box-shadow:0 0 0 4px rgba(209,52,56,.16),0 2px 8px rgba(209,52,56,.4)}50%{box-shadow:0 0 0 7px rgba(209,52,56,.08),0 2px 10px rgba(209,52,56,.5)}}
+#fn-demo .beam{position:absolute;height:3px;border-radius:2px;background:linear-gradient(90deg,#f2b25c,#d97a06);box-shadow:0 0 10px rgba(217,122,6,.7);transform-origin:left center;transform:scaleX(0);z-index:4;transition:transform .38s ease}
+#fn-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
+#fn-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
 
 /* 控制与图例 */
-#sumproduct-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
-#sumproduct-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
-#sumproduct-demo .narr.err{background:#fdecec;border-color:#efc3c3}
-#sumproduct-demo .narr.warn{background:#fdf3e3;border-color:#f0d9ae}
-#sumproduct-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
-#sumproduct-demo .narr.ok .dot{background:var(--p4)}
-#sumproduct-demo .narr.err .dot{background:#d13438}
-#sumproduct-demo .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-#sumproduct-demo .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid #e2dccd;border-radius:999px;background:#fff;color:var(--foreground);font-size:12.5px;cursor:default}
-#sumproduct-demo .chip[data-p]{cursor:pointer}
-#sumproduct-demo .chip[data-p]:hover{border-color:var(--muted-foreground)}
-#sumproduct-demo .chip .n{width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex:none}
+#fn-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
+#fn-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
+#fn-demo .narr.err{background:#fdecec;border-color:#efc3c3}
+#fn-demo .narr.warn{background:#fdf3e3;border-color:#f0d9ae}
+#fn-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+#fn-demo .narr.ok .dot{background:var(--p4)}
+#fn-demo .narr.err .dot{background:#d13438}
+#fn-demo .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#fn-demo .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid #e2dccd;border-radius:999px;background:#fff;color:var(--foreground);font-size:12.5px;cursor:default}
+#fn-demo .chip[data-p]{cursor:pointer}
+#fn-demo .chip[data-p]:hover{border-color:var(--muted-foreground)}
+#fn-demo .chip .n{width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex:none}
 
 /* ===== 为什么实验区 ===== */
-#sumproduct-demo .why{margin-top:22px;border-top:1px dashed #d8d2c4;padding-top:6px}
-#sumproduct-demo .why-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
-#sumproduct-demo .why-head b{font-size:14.5px}
-#sumproduct-demo .why-head .hint{font-size:12.5px;color:var(--muted-foreground)}
-#sumproduct-demo .exp{margin-top:12px;padding:12px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9}
-#sumproduct-demo .exp-t{font-size:13px;line-height:1.55;margin-bottom:10px}
-#sumproduct-demo .exp-t b{color:#186a3e}
-#sumproduct-demo .exp-t .note{color:var(--muted-foreground);font-size:12px}
-#sumproduct-demo .exp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#sumproduct-demo .exp-row .hint{font-size:12.5px;color:var(--muted-foreground)}
+#fn-demo .why{margin-top:22px;border-top:1px dashed #d8d2c4;padding-top:6px}
+#fn-demo .why-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+#fn-demo .why-head b{font-size:14.5px}
+#fn-demo .why-head .hint{font-size:12.5px;color:var(--muted-foreground)}
+#fn-demo .exp{margin-top:12px;padding:12px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9}
+#fn-demo .exp-t{font-size:13px;line-height:1.55;margin-bottom:10px}
+#fn-demo .exp-t b{color:#186a3e}
+#fn-demo .exp-t .note{color:var(--muted-foreground);font-size:12px}
+#fn-demo .exp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#fn-demo .exp-row .hint{font-size:12.5px;color:var(--muted-foreground)}
 
 /* 口诀卡 */
-#sumproduct-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
-#sumproduct-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
-#sumproduct-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
-#sumproduct-demo .motto-l{font-size:14px;line-height:2}
-#sumproduct-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
+#fn-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#fn-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#fn-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#fn-demo .motto-l{font-size:14px;line-height:2}
+#fn-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
+/* prefers-reduced-motion：只关闭双探针呼吸脉动等非必要连续装饰动画；
+   探针位移、乘积飞入、滚动累加与全部教学步骤保留（SKILL 验证清单第 7 项） */
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important}
+}
 </style>
 
-<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a></div>
 <h3>SUMPRODUCT 是怎么工作的？</h3>
 <p class="sub" style="margin-bottom:4px"><b>柜台流水只有数量、单价两列，想知道今天一共卖了多少钱。</b>老办法是旁边补一列金额 =B2*C2 拖到底，再对它求和。SUMPRODUCT 把两步并成一步：对应行相乘，乘完就加。</p>
 <p class="sub">蓝点沿着数量列走，紫点沿着单价列走——每配成一行，就往合计格里丢一笔乘积。鼠标悬停公式里的彩色参数段（或下方图例），表里对应的区域会亮</p>
@@ -139,27 +143,28 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="xl-title"><span>今日流水.xlsx</span><span class="save">已自动保存</span></div>
   <div class="xl-ribbon">开始　插入　公式　数据　审阅</div>
   <div class="fx">
-    <span class="name" id="sp-namebox">C8</span>
+    <span class="name" id="fd-namebox">C8</span>
     <span class="fxl">fx</span>
-    <div class="fl">=SUMPRODUCT(<span class="seg s1" id="sp-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span><span>, </span><span class="seg s2" id="sp-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C2:C6</span><span>)</span></div>
+    <div class="fl">=SUMPRODUCT(<span class="seg s1" id="fd-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span><span>, </span><span class="seg s2" id="fd-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C2:C6</span><span>)</span></div>
   </div>
   <div class="grid-scroll">
-    <div class="grid-box" id="sp-gbox">
-      <table class="xlt" id="sp-xlt"></table>
-      <div class="ovl" id="sp-ovl">
-        <div class="beam" id="sp-beam"></div>
-        <div class="probe pr1" id="sp-probe1"></div>
-        <div class="probe pr2" id="sp-probe2"></div>
-        <div class="chipfly" id="sp-chipfly"></div>
+    <div class="grid-box" id="fd-gbox">
+      <table class="xlt" id="fd-xlt"></table>
+      <div class="ovl" id="fd-ovl">
+        <div class="beam" id="fd-beam"></div>
+        <div class="probe pr1" id="fd-probe1"></div>
+        <div class="probe pr2" id="fd-probe2"></div>
+        <div class="chipfly" id="fd-chipfly"></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="viz-row" style="margin-top:12px">
-  <button id="sp-play" class="btn-p" type="button" title="从头重放整段计算">▶ 播放</button>
-  <button id="sp-step" class="btn-s" type="button" title="一步一步看它怎么乘怎么加">≫ 单步</button>
-  <span class="narr" aria-live="polite"><span class="dot"></span><span id="sp-narrtx">准备就绪——点「播放」，看它一行一行乘上去</span></span>
+  <button id="fd-play" class="btn-p" type="button" title="从头重放整段计算">▶ 播放</button>
+  <button id="fd-step" class="btn-s" type="button" title="一步一步看它怎么乘怎么加">≫ 单步</button>
+  <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
+  <span class="narr" aria-live="polite"><span class="dot"></span><span id="fd-narrtx">准备就绪——点「播放」，看它一行一行乘上去</span></span>
 </div>
 
 <div class="legend">
@@ -172,7 +177,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 <div class="why">
   <div class="why-head">
     <div><b>为什么这么填？</b><span class="hint">　参数不用背——故意改错，看它翻车，why 自然就懂</span></div>
-    <button id="sp-reset" class="btn-s" type="button">还原默认公式</button>
+ton>
   </div>
 
   <div class="exp">
@@ -217,12 +222,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="motto-tip">进阶：把条件写成 (A2:A6="保温杯")、用乘号乘上金额那一列，同一格公式就能按条件合计——乘号写法的主场。SUMPRODUCT 直接吃数组表达式，不需要 Ctrl+Shift+Enter。</div>
 </div>
 
-<p class="sr-only">交互演示：SUMPRODUCT 取数量列与单价列两个区域，逐行对应相乘，再把乘积求和写入 C8。四个实验分别演示：区域错位一行导致静默算错、两区域行数不等报 #VALUE!、区域里的文字被当 0 导致漏算、逗号写法与乘号写法（数组相乘）的差异——乘号写法遇文字直接 #VALUE!。</p>
+<p class="sr-only" id="fd-summary">交互演示：SUMPRODUCT 取数量列与单价列两个区域，逐行对应相乘，再把乘积求和写入 C8。四个实验分别演示：区域错位一行导致静默算错、两区域行数不等报 #VALUE!、区域里的文字被当 0 导致漏算、逗号写法与乘号写法（数组相乘）的差异——乘号写法遇文字直接 #VALUE!。</p>
 </div>
 
 <script>
 (function(){
-const R=document.getElementById('sumproduct-demo');
+const R=document.getElementById('fn-demo');
 const GOODS=[["保温杯",12,45],["雨伞",8,32],["一次性纸杯",30,3],["马克杯",6,25],["保温袋",15,18]];
 const N=GOODS.length,TXT_I=3; // TXT_I：马克杯（行 5），实验三把它单价换成文字
 const TIERS={
@@ -246,14 +251,14 @@ for(let r=2;r<=6;r++){
 h+='<tr><th class="rh">7</th><td data-a="A7"></td><td data-a="B7"></td><td data-a="C7"></td></tr>';
 h+='<tr><th class="rh">8</th><td class="h" colspan="2">今日合计(元)</td><td class="tabular-nums fcell num" data-a="C8"></td></tr>';
 h+='</tbody>';
-R.querySelector('#sp-xlt').innerHTML=h;
+R.querySelector('#fd-xlt').innerHTML=h;
 
 const cel={};R.querySelectorAll('[data-a]').forEach(el=>{cel[el.dataset.a]=el});
-const gbox=R.querySelector('#sp-gbox'),p1=R.querySelector('#sp-probe1'),p2=R.querySelector('#sp-probe2'),chipfly=R.querySelector('#sp-chipfly'),beam=R.querySelector('#sp-beam');
-const namebox=R.querySelector('#sp-namebox');
+const gbox=R.querySelector('#fd-gbox'),p1=R.querySelector('#fd-probe1'),p2=R.querySelector('#fd-probe2'),chipfly=R.querySelector('#fd-chipfly'),beam=R.querySelector('#fd-beam');
+const namebox=R.querySelector('#fd-namebox');
 let sg1=null,sg2=null; // 公式段随写法切换重建，由 syncFormula 重新抓取
-const narrEl=R.querySelector('#sp-narrtx'),narrWrap=narrEl.parentElement;
-const playBtn=R.querySelector('#sp-play'),stepBtn=R.querySelector('#sp-step');
+const narrEl=R.querySelector('#fd-narrtx'),narrWrap=narrEl.parentElement;
+const playBtn=R.querySelector('#fd-play'),stepBtn=R.querySelector('#fd-step');
 const fcell=cel['C8'];
 
 function pos(el){const r=el.getBoundingClientRect(),b=gbox.getBoundingClientRect();return{l:r.left-b.left,t:r.top-b.top,w:r.width,cx:r.left-b.left+r.width/2,cy:r.top-b.top+r.height/2}}
@@ -303,13 +308,13 @@ function priceTop(){return 2+TIERS[tier].off}
 function priceEnd(){return priceTop()+TIERS[tier].plen-1}
 function syncFormula(){
   const fl=R.querySelector('.fx .fl');
-  let h='=SUMPRODUCT(<span class="seg s1" id="sp-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span>';
+  let h='=SUMPRODUCT(<span class="seg s1" id="fd-sg1" data-p="1" style="background:#2563eb;color:#fff;border:1px solid #2563eb;font-weight:500" title="① 第 1 参数：数量列——要乘的第一列">B2:B6</span>';
   h+=form==='star'
     ?'<span class="seg s3" data-p="3" style="background:#d97a06;color:#fff;border:1px solid #d97a06;font-weight:500" title="乘号：先把两列逐行相乘成一个新数组；文字遇乘号直接 #VALUE!">*</span>'
     :'<span>, </span>';
-  h+='<span class="seg s2" id="sp-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C'+priceTop()+':C'+priceEnd()+'</span><span>)</span>';
+  h+='<span class="seg s2" id="fd-sg2" data-p="2" style="background:#7c3aed;color:#fff;border:1px solid #7c3aed;font-weight:500" title="② 第 2 参数：单价列——和数量列按行配对，行数必须一样多，起点要对着同一行">C'+priceTop()+':C'+priceEnd()+'</span><span>)</span>';
   fl.innerHTML=h;
-  sg1=R.querySelector('#sp-sg1');sg2=R.querySelector('#sp-sg2');
+  sg1=R.querySelector('#fd-sg1');sg2=R.querySelector('#fd-sg2');
   sg2.classList.toggle('badseg',tier==='shift'||tier==='short');
   bindFx();
   const c5=cel['C5'];
@@ -509,7 +514,7 @@ R.querySelectorAll('.exp-btn[data-form]').forEach(btn=>btn.addEventListener('cli
   if(btn.dataset.form===form)return;
   stopAndClear();form=btn.dataset.form;setFormButtons();syncFormula();replay();
 }));
-R.querySelector('#sp-reset').addEventListener('click',()=>{
+R.querySelector('#fd-reset').addEventListener('click',()=>{
   stopAndClear();tier='ok';form='comma';
   setTierButtons();setFormButtons();syncFormula();
   narr('已还原为 =SUMPRODUCT(B2:B6, C2:C6)');
@@ -540,22 +545,6 @@ function scheduleAutoReset(){
 /* ---- 初始 ---- */
 syncFormula();setTierButtons();setFormButtons();
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
-})();
-</script>
-<script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
-(function(){
-  var el=document.getElementById('uv-count');
-  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
-  var PAGE_ID='tutorials/sumproduct';
-  try{
-    var v=localStorage.getItem('h2e_vid');
-    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
-    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
-      .then(function(r){return r.json()})
-      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
-      .catch(function(){});
-  }catch(e){}
 })();
 </script>
 </body>
