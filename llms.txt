@@ -1,0 +1,13 @@
+# how-to-excel · 会动的 Excel 函数讲解
+
+> 每个函数一页的 Excel 函数交互教学站：动画演示函数逐行执行的真实过程（如 VLOOKUP 的探针扫描、SUMIFS 的逐行过筛），支持修改参数、故意构造错误现场看报错行为。讲解为中文，错误教学化与机制可视化是特色，适合初学者与教学素材引用。
+
+## 函数讲解页
+
+- [VLOOKUP](https://benyichan.github.io/how-to-excel/vlookup/): 两张表对不上时的查找取值：逐行比对、命中取值、#N/A 现场排查。
+- [SUMPRODUCT](https://benyichan.github.io/how-to-excel/sumproduct/): 两列逐行配对相乘、乘积滚动累计；错位、少选、混入文字三种翻车现场。
+- [SUMIFS](https://benyichan.github.io/how-to-excel/sumifs/): 多条件求和：逐行过筛，条件都过才累计；通配符与区域错位的坑。
+- [INDIRECT](https://benyichan.github.io/how-to-excel/indirect/): 文本当地址用：跨表现场翻译取值；写死与现拼差异、插行取错数的坑。
+- [ADDRESS](https://benyichan.github.io/how-to-excel/address/): 行号列号拼合法地址：列号进位、F4 四档锁定、R1C1 方括号、非法参数现场报错。
+
+源码仓库：https://github.com/benyichan/how-to-excel

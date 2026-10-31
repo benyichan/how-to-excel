@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SUMIFS 是怎么工作的？——交互讲解</title>
+<meta name="description" content="动画看 SUMIFS 逐行过筛，两个条件都过的行金额才滚动累加；增减条件、通配符匹配、区域错位的坑现场演示。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23217346'/%3E%3Ctext x='16' y='22.5' font-family='Consolas,monospace' font-size='15' font-weight='bold' fill='%23fffdf9' text-anchor='middle'%3Efx%3C/text%3E%3C/svg%3E">
+<link rel="canonical" href="https://benyichan.github.io/how-to-excel/sumifs/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="how-to-excel">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="SUMIFS 是怎么工作的？——交互讲解">
+<meta property="og:description" content="动画看 SUMIFS 逐行过筛，两个条件都过的行金额才滚动累加；增减条件、通配符匹配、区域错位的坑现场演示。">
+<meta property="og:url" content="https://benyichan.github.io/how-to-excel/sumifs/">
+<meta property="og:image" content="https://benyichan.github.io/how-to-excel/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <!--
   excel-function-explainer · SUMIFS 页（由 assets/skeleton.html 改造）
   求值计划（真实执行顺序）：逐行 i=2..13 → 条件1(A列)检查 → 条件2(B列)检查 → 全过则 acc+=C[i]
@@ -117,6 +130,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   #fn-demo *{scroll-behavior:auto !important}
 }
 </style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "LearningResource", "name": "SUMIFS 是怎么工作的？——交互讲解", "description": "动画看 SUMIFS 逐行过筛，两个条件都过的行金额才滚动累加；增减条件、通配符匹配、区域错位的坑现场演示。", "url": "https://benyichan.github.io/how-to-excel/sumifs/", "inLanguage": "zh-CN", "isAccessibleForFree": true, "learningResourceType": "interactive tutorial", "educationalLevel": "beginner", "teaches": "SUMIFS 函数的执行机制、参数含义与常见错误", "about": {"@type": "Thing", "name": "SUMIFS (Excel function)"}}</script>
 </head>
 <body>
 <div id="fn-demo">
