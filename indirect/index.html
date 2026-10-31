@@ -10,8 +10,6 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px;color:var(--foreground);font-size:14px;--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;--frame-inset:2px}
 #fn-demo h3{margin:0 0 2px}
 #fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
-#fn-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
-#fn-demo .uvnum:empty{display:none}
 #fn-demo .backlink{color:#6d6759;text-decoration:none}
 #fn-demo .backlink:hover{color:#217346}
 #fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground);line-height:1.65}
@@ -32,6 +30,9 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .seg.s4{background:#188a4c;color:#fff}
 #fn-demo .legend{font-size:11.5px;color:#6f6a5e;padding:5px 12px;border-bottom:1px solid #efe9dc;background:#fbfaf7;display:flex;gap:12px;flex-wrap:wrap}
 #fn-demo .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#fn-demo .legend [data-link]{cursor:pointer;border-radius:4px}
+#fn-demo .legend [data-link]:hover,#fn-demo .legend [data-link]:focus-visible{color:#2b2723;background:#f1ecdf}
+#fn-demo .fl .seg.lghl{outline:2px solid currentColor;outline-offset:1px}
 /* 网格：左汇总表 + 右月度表 */
 #fn-demo .grid-scroll{overflow-x:auto;padding:10px 10px 4px}
 #fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
@@ -58,7 +59,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 @keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 /* 覆盖层 */
 #fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
-#fn-demo .probe{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);border:2px solid #fff;box-sizing:border-box;box-shadow:0 1px 6px rgba(37,99,235,.45);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
+#fn-demo .probe{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse 1.5s ease-in-out infinite}
 #fn-demo .probe.on{opacity:1}
 #fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c)}
 @keyframes fd-pulse{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4),0 0 0 2px #fff}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5),0 0 0 2px #fff}}
@@ -137,15 +138,18 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   #fn-demo .sb-lab{min-width:auto}
   #fn-demo .narr{display:flex}
 }
+/* prefers-reduced-motion：只关闭探针呼吸脉动等非必要连续装饰动画；
+   探针位移、地址解析步骤、取值飞回与全部教学步骤保留（SKILL 验证清单第 7 项）。
+   历史版本曾用 .01ms 全灭式压缩全部动画——结果写入/警示反馈对 reduce 用户不可见，已按规范重构 */
 @media (prefers-reduced-motion: reduce){
   #fn-demo .probe{animation:none !important}
-  #fn-demo *{scroll-behavior:auto !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  #fn-demo *{scroll-behavior:auto !important}
 }
 </style>
 </head>
 <body>
 <div id="fn-demo">
-<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a></div>
 <h3>INDIRECT 是怎么工作的？</h3>
 <p class="sub">汇总表要按月份名去各月工作表取数：A 列写着「三月」，想取三月表 C5 的外套销售额，公式却拿单元格里的文字没办法——直接写 三月!C5 只会被当成一串文本，一行行写死引用，月份一变全要手改。INDIRECT 把一段文本当场翻译成地址，进门把值取出来：地址是拼出来的，月份一换，取数跟着换。</p>
 
@@ -153,11 +157,11 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="xl-title"><span>INDIRECT-按月取数.xlsx</span><span style="opacity:.72;font-size:11px">已自动保存</span></div>
   <div class="xl-ribbon" aria-hidden="true">开始　插入　公式　数据　审阅</div>
   <div class="fx"><span class="name" id="fd-namebox">B2</span><div class="fl" id="fd-fl"></div></div>
-  <div class="legend" aria-hidden="true">
-    <span><i style="background:#2563eb"></i>文本来源（月份格 / 数字）</span>
-    <span><i style="background:#7c3aed"></i>表名</span>
-    <span><i style="background:#d97a06"></i>地址里的行与列</span>
-    <span><i style="background:#188a4c"></i>样式开关 FALSE</span>
+  <div class="legend" aria-label="参数颜色图例，可悬停或点击查看对应参数">
+    <span data-link="src" tabindex="0" role="button"><i style="background:#2563eb"></i>文本来源（月份格 / 数字）</span>
+    <span data-link="src target" tabindex="0" role="button"><i style="background:#7c3aed"></i>表名</span>
+    <span data-link="target" tabindex="0" role="button"><i style="background:#d97a06"></i>地址里的行与列</span>
+    <span data-link="style" tabindex="0" role="button"><i style="background:#188a4c"></i>样式开关 FALSE</span>
   </div>
   <div class="grid-scroll"><div class="grid-box" id="fd-gbox">
     <table class="xlt" id="fd-xlt"></table>
@@ -299,12 +303,20 @@ function renderFx(){
 /* 公式段与数据/参数台联动（事件委托，innerHTML 重建也有效） */
 flEl.addEventListener('mouseover',e=>{const s=e.target.closest('.seg');if(!s)return;const k=linkEl(s.dataset.link);if(k)k.classList.add('klink');const c=linkCell(s.dataset.link);if(c)c.classList.add('refsel')});
 flEl.addEventListener('mouseout',e=>{const s=e.target.closest('.seg');if(!s)return;const k=linkEl(s.dataset.link);if(k)k.classList.remove('klink');const c=linkCell(s.dataset.link);if(c)c.classList.remove('refsel')});
-flEl.addEventListener('click',e=>{const s=e.target.closest('.seg');if(!s)return;narr({
+const segNarr=k=>({
   src:'ref_text 的这一半来自 A'+activeRow+' 格子——月份换了它就换',
   target:'这一截是地址里的行与列：C 列第 5 行，每张月表的第 5 行都放着同一个商品',
   style:'第二参数 FALSE：告诉 INDIRECT 按 R1C1 样式解析；省略等同 TRUE，按 A1 样式',
   bad:'这段文本拼不成合法地址，解析阶段当场 #REF!'
-}[s.dataset.link]||'')});
+}[k]);
+flEl.addEventListener('click',e=>{const s=e.target.closest('.seg');if(!s)return;narr(segNarr(s.dataset.link)||'')});
+/* 图例三处联动：悬停/点击图例 → 高亮公式段、来源格与目标格（与公式段 hover 同一套联动） */
+const legendEl=R.querySelector('.legend');
+function lgTargets(sp){return sp.dataset.link.split(' ').flatMap(k=>{const seg=[].slice.call(flEl.querySelectorAll('.seg[data-link="'+k+'"]'));const kn=linkEl(k);const cc=linkCell(k);const out=seg.map(s=>[s,kn,cc]);if(!seg.length&&(kn||cc))out.push([null,kn,cc]);return out})}
+legendEl.addEventListener('mouseover',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;lgTargets(sp).forEach(([s,kn,cc])=>{if(s)s.classList.add('lghl');if(kn)kn.classList.add('klink');if(cc)cc.classList.add('refsel')})});
+legendEl.addEventListener('mouseout',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;lgTargets(sp).forEach(([s,kn,cc])=>{if(s)s.classList.remove('lghl');if(kn)kn.classList.remove('klink');if(cc)cc.classList.remove('refsel')})});
+legendEl.addEventListener('click',e=>{const sp=e.target.closest('[data-link]');if(!sp)return;narr(segNarr(sp.dataset.link.split(' ')[0])||'')});
+legendEl.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const sp=e.target.closest('[data-link]');if(!sp)return;e.preventDefault();narr(segNarr(sp.dataset.link.split(' ')[0])||'')});
 function linkEl(k){return{style:R.querySelector('#fd-k-style'),bad:R.querySelector('#fd-k-bad')}[k]}
 function linkCell(k){const p=plan(scenOf(),activeRow);if(k==='src')return cel['A'+activeRow];if(k==='target'&&p.parse.ok)return cel[p.addr];return null}
 
@@ -510,22 +522,6 @@ R.querySelector('#fd-gotcha-play').addEventListener('click',()=>{
 /* ── 启动 ── */
 renderGrid();syncKnobs();prefill();
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500);
-})();
-</script>
-<script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
-(function(){
-  var el=document.getElementById('uv-count');
-  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
-  var PAGE_ID='tutorials/indirect';
-  try{
-    var v=localStorage.getItem('h2e_vid');
-    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
-    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
-      .then(function(r){return r.json()})
-      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
-      .catch(function(){});
-  }catch(e){}
 })();
 </script>
 </body>
