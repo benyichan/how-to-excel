@@ -109,14 +109,19 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .motto-l{font-size:14px;line-height:2}
 #fn-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
 #fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
 #fn-demo [tabindex="0"]:focus-visible,#fn-demo button:focus-visible{outline:2px solid #217346;outline-offset:2px}
+/* prefers-reduced-motion：只关闭探针呼吸脉动等非必要连续装饰动画；
+   探针位移、命中光束、金额飞入滚动与全部教学步骤保留（SKILL 验证清单第 7 项） */
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important}
+}
 </style>
 </head>
 <body>
 <div id="fn-demo">
 <!-- 部署为站点子路径（如 /sumifs/）时此链接跳回集合目录；本地单开可删 -->
-<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a></div>
 <h3>SUMIFS 是怎么工作的？</h3>
 <p class="sub">12 行订单流水，想算「西湖店的衬衫一共卖了多少钱」——门店、品类两个筛子同时套，手动挑行迟早漏一行；让 SUMIFS 按条件替你挑行、替你加总。</p>
 <div class="xl">
@@ -137,13 +142,14 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 <div style="margin-top:12px">
   <button id="fd-play" class="btn-p" type="button">▶ 播放</button>
   <button id="fd-step" class="btn-s" type="button">≫ 单步</button>
+  <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
   <span class="narr" aria-live="polite"><span class="dot"></span><span id="fd-narrtx">准备就绪</span></span>
 </div>
 <p class="sr-only" id="fd-summary">SUMIFS 交互讲解页。目标：对 12 行订单流水按「门店=西湖店、品类=衬衫」求和金额列。公式 =SUMIFS(C2:C13,A2:A13,F2,B2:B13,F3)，结果写入 F4：第一参数 C2:C13 是求和区域（蓝色，要加总的金额列）；随后条件成对出现——A2:A13 门店列配 F2 的「西湖店」、B2:B13 品类列配 F3 的「衬衫」（条件区域紫色、条件值绿色）。执行阶段：从第 2 行到第 13 行逐行检查，门店与品类都满足时把该行金额累加（累计中间值以橙色飞入动画与滚动数字呈现，本演示合计 690）；任一条件不符则整行跳过。实验区三组独立旋钮：一、条件对数——门店加品类双条件（结果 690）与只按门店（结果 1410）对比，多一对条件就多砍一刀；二、品类写法——「衬衫」全等匹配（690）与「衬衫*」通配符（870）对比，差 180 是西湖店那件衬衫裙，文字条件默认全等；三、区域等长——求和区域少选两行（C2:C11）时 SUMIFS 不像 SUMIF 会自动扩展，直接返回 #VALUE!。只按门店时品类写法档置灰不参与。口诀：求和区域打头阵，条件成对跟在后；行行全过才累加，区域等长别错位。控件：播放、单步、还原；点表格行可把门店条件换成该行门店并重放。</p>
 <div class="why">
   <div class="why-head">
     <div><b>为什么这么填？</b><span class="hint">　参数不用背——故意改错，看它翻车，why 自然就懂</span></div>
-    <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
+ton>
   </div>
   <div class="exp">
     <div class="exp-t"><b>实验一 · 条件一对一对排</b>　求和区域打头，后面每对就是「区域, 条件」；多一对条件就多砍一刀，行要全过才累加。<span class="note">（门店、品类两张筛子一起筛，比只按门店细得多）</span></div>
@@ -188,7 +194,8 @@ const DATA=[
   ["城西店","T恤",130],["西湖店","衬衫",220],["滨江店","毛衣",300]
 ];
 const N=DATA.length, LAST=N+1; /* 13 */
-/* 单路径：不做 prefers-reduced-motion 分支——用户 Windows 为系统级 reduce，分支会吃掉全部动效（ADDRESS 页 T61 先例） */
+/* 动效偏好：CSS 侧已按规范接入 prefers-reduced-motion 分支（只关探针呼吸脉动等非必要连续装饰，
+   不隐藏线索、不跳步）；本常量为步骤节奏系数，双档下保持一致以保证交互步骤与结果相同 */
 const SL=1;
 
 let pair='two',wild=false,shortRange=false,critStore='西湖店';
@@ -431,22 +438,6 @@ for(let r=2;r<=LAST;r++){
 }
 syncFormulaState();prefill();
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
-})();
-</script>
-<script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
-(function(){
-  var el=document.getElementById('uv-count');
-  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
-  var PAGE_ID='tutorials/sumifs';
-  try{
-    var v=localStorage.getItem('h2e_vid');
-    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
-    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
-      .then(function(r){return r.json()})
-      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
-      .catch(function(){});
-  }catch(e){}
 })();
 </script>
 </body>
