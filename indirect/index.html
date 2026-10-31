@@ -126,11 +126,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 #fn-demo .gotcha .gv{font-family:Consolas,monospace;font-weight:700}
 #fn-demo .gotcha .bad{color:#b3620a}
 #fn-demo .gotcha .good{color:#188a4c}
-/* 口诀卡 */
-#fn-demo .mantra{max-width:620px;margin:18px auto 0;border:1px solid #e2dccd;border-radius:10px;background:#fbfaf7;padding:10px 14px}
-#fn-demo .mantra-t{font-weight:700;font-size:13px;color:#217346;margin-bottom:6px}
-#fn-demo .mantra li{font-size:13px;margin:4px 0 4px 18px;line-height:1.6}
-#fn-demo .mantra code{font-family:Consolas,monospace;background:#f1ede2;border-radius:3px;padding:0 4px}
+/* 口诀卡（站内统一样式） */
+#fn-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#fn-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#fn-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#fn-demo .motto-l{font-size:14px;line-height:2}
+#fn-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
 @media (max-width:560px){
   #fn-demo .sb-hint{margin-left:0}
   #fn-demo .sb-lab{min-width:auto}
@@ -216,15 +217,11 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   </div>
 </div>
 
-<div class="mantra">
-  <div class="mantra-t">INDIRECT 口诀（截图存好）</div>
-  <ul>
-    <li>文本当地址，进门就取货：<code>=INDIRECT("三月!C5")</code> → <code>12876</code></li>
-    <li>最常用是现拼：<code>=INDIRECT(A2&amp;"!C5")</code>，月份一换全表跟着换</li>
-    <li>R1C1 文本要带 FALSE：<code>=INDIRECT("R4C1",FALSE)</code></li>
-    <li>拼不出合法地址就 #REF!：行号从 1 数起，纯数字 5 也当不了地址</li>
-    <li>文本地址不跟着插行改门牌——数据挪窝它还看老地方，直接引用才会自动改写</li>
-  </ul>
+<div class="motto">
+  <div class="motto-t">口诀卡</div>
+  <div class="motto-f">=INDIRECT("三月!C5") → 12876</div>
+  <div class="motto-l">文本当地址，进门就取货；现拼才跟表走，写死抓不住。<br>R1C1 要带 FALSE，拼不合法就 #REF!。</div>
+  <div class="motto-tip">进阶：最常用 =INDIRECT(A2&"!C5")，月份一换全表跟着换；文本地址不跟着插行改门牌——数据挪窝它还看老地方，直接引用才会自动改写。</div>
 </div>
 
 </div>
