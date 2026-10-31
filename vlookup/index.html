@@ -7,141 +7,145 @@
 <style>
 :root{color-scheme:light;--foreground:#2b2723;--muted-foreground:#6d6759;--accent:#d97a06}
 body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif}
-#vlookup-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px}
+#fn-demo{max-width:680px;margin:0 auto;padding:20px 14px 40px}
 </style>
 </head>
 <body>
-<div id="vlookup-demo">
+<div id="fn-demo">
 <style>
-#vlookup-demo{--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;color:var(--foreground);font-size:14px}
-#vlookup-demo h3{margin:0 0 2px}
-#vlookup-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
-#vlookup-demo .backlink{color:#6d6759;text-decoration:none}
-#vlookup-demo .backlink:hover{color:#217346}
-#vlookup-demo .uvnum{color:#9a958d;font-family:Consolas,monospace;font-size:12px;letter-spacing:.08em}
-#vlookup-demo .uvnum:empty{display:none}
-#vlookup-demo .sub{margin:0 0 12px;color:var(--muted-foreground)}
-#vlookup-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#fn-demo{--p1:#2563eb;--p2:#7c3aed;--p3:#d97a06;--p4:#188a4c;color:var(--foreground);font-size:14px}
+#fn-demo h3{margin:0 0 2px}
+#fn-demo .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+#fn-demo .backlink{color:#6d6759;text-decoration:none}
+#fn-demo .backlink:hover{color:#217346}
+#fn-demo .sub{margin:0 0 12px;color:var(--muted-foreground)}
+#fn-demo .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ===== 按钮体系（自包含，不依赖宿主） ===== */
-#vlookup-demo .btn-p,#vlookup-demo .btn-s,#vlookup-demo .exp-btn{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
-#vlookup-demo .btn-p{background:#217346;border-color:#217346;color:#fff;margin-right:8px}
-#vlookup-demo .btn-p:disabled{opacity:.55;cursor:default}
-#vlookup-demo .btn-s{margin-right:8px}
-#vlookup-demo .exp-btn.on{border-color:#217346;box-shadow:inset 0 0 0 1px #217346;background:#f3f9f5;color:#186a3e}
-#vlookup-demo .exp-btn{margin:0 8px 8px 0}
+#fn-demo .btn-p,#fn-demo .btn-s,#fn-demo .exp-btn{font:inherit;font-size:13px;padding:5px 14px;border-radius:6px;border:1px solid #d7d1c3;background:#fff;color:#2b2723;cursor:pointer}
+#fn-demo .btn-p{background:#217346;border-color:#217346;color:#fff;margin-right:8px}
+#fn-demo .btn-p:disabled{opacity:.55;cursor:default}
+#fn-demo .btn-s{margin-right:8px}
+#fn-demo .exp-btn.on{border-color:#217346;box-shadow:inset 0 0 0 1px #217346;background:#f3f9f5;color:#186a3e}
+#fn-demo .exp-btn{margin:0 8px 8px 0}
 
 /* ===== Excel 窗口（产品拟真，固定浅色） ===== */
-#vlookup-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
-#vlookup-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
-#vlookup-demo .xl-title .save{opacity:.72;font-size:11px}
-#vlookup-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
-#vlookup-demo .fx{display:flex;align-items:stretch;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
-#vlookup-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
-#vlookup-demo .fx .fxl{width:34px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#a09a8d;font-family:Georgia,serif;font-style:italic}
-#vlookup-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,'Courier New',monospace;white-space:nowrap;overflow-x:auto}
-#vlookup-demo .seg{border-radius:4px;padding:1px 6px;margin:0 2px;font-weight:500}
-#vlookup-demo .s1{background:#2563eb;color:#fff}
-#vlookup-demo .s2{background:#7c3aed;color:#fff}
-#vlookup-demo .s3{background:#d97a06;color:#fff}
-#vlookup-demo .s4{background:#188a4c;color:#fff}
-#vlookup-demo .seg:hover{filter:brightness(.95)}
-#vlookup-demo .seg.badseg{background:#fde8e8 !important;color:#c0392b !important}
-#vlookup-demo .fl{transform-origin:left center}
-#vlookup-demo .fl.flash{animation:vl-fflash .95s ease}
-@keyframes vl-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01);box-shadow:0 0 0 1px rgba(33,115,70,.5)}}
+#fn-demo .xl{max-width:620px;margin:0 auto;border:1px solid #d7d1c3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(31,27,18,.10)}
+#fn-demo .xl-title{background:#217346;color:#fff;padding:7px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+#fn-demo .xl-title .save{opacity:.72;font-size:11px}
+#fn-demo .xl-ribbon{background:#f6f4ef;border-bottom:1px solid #e6e1d4;color:#6f6a5e;font-size:11px;padding:4px 12px;letter-spacing:3px}
+#fn-demo .fx{display:flex;align-items:stretch;border-bottom:1px solid #e0dacb;background:#fbfaf7;font-size:12.5px}
+#fn-demo .fx .name{width:56px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#57534a;font-family:Consolas,monospace}
+#fn-demo .fx .fxl{width:34px;display:flex;align-items:center;justify-content:center;border-right:1px solid #e0dacb;color:#a09a8d;font-family:Georgia,serif;font-style:italic}
+#fn-demo .fx .fl{flex:1;display:flex;align-items:center;padding:6px 10px;font-family:Consolas,'Courier New',monospace;white-space:nowrap;overflow-x:auto}
+#fn-demo .seg{border-radius:4px;padding:1px 6px;margin:0 2px;font-weight:500}
+#fn-demo .s1{background:#2563eb;color:#fff}
+#fn-demo .s2{background:#7c3aed;color:#fff}
+#fn-demo .s3{background:#d97a06;color:#fff}
+#fn-demo .s4{background:#188a4c;color:#fff}
+#fn-demo .seg:hover{filter:brightness(.95)}
+#fn-demo .seg.badseg{background:#fde8e8 !important;color:#c0392b !important}
+#fn-demo .fl{transform-origin:left center}
+#fn-demo .fl.flash{animation:fd-fflash .95s ease}
+@keyframes fd-fflash{0%,100%{transform:scale(1);box-shadow:none}30%,70%{transform:scale(1.055);box-shadow:0 0 0 2px #217346,0 3px 14px rgba(33,115,70,.30);background:#eaf5ef}50%{transform:scale(1.01);box-shadow:0 0 0 1px rgba(33,115,70,.5)}}
 
 /* ===== 网格 ===== */
-#vlookup-demo .grid-scroll{overflow-x:auto;padding:10px}
-#vlookup-demo .grid-box{position:relative;width:max-content;margin:0 auto}
-#vlookup-demo table.xlt,#vlookup-demo table.mini{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
-#vlookup-demo .xlt th,#vlookup-demo .xlt td,#vlookup-demo .mini th,#vlookup-demo .mini td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap}
-#vlookup-demo .xlt td,#vlookup-demo .xlt th,#vlookup-demo .mini td,#vlookup-demo .mini th{transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
-#vlookup-demo .xlt .rh,#vlookup-demo .mini .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
-#vlookup-demo .xlt .ch,#vlookup-demo .mini .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
-#vlookup-demo .xlt .grp{background:#faf8f3;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #e0dacb}
-#vlookup-demo .xlt .gap{background:transparent !important;border-color:transparent}
-#vlookup-demo .xlt td.h,#vlookup-demo .mini td.h{font-weight:500;color:#45413a;background:#faf8f3}
-#vlookup-demo .mono{font-family:Consolas,'Courier New',monospace;font-size:11.5px}
-#vlookup-demo .cellbtn{background:none;border:none;font:inherit;color:inherit;padding:0;cursor:pointer}
-#vlookup-demo .cellbtn:hover{text-decoration:underline}
-#vlookup-demo td.fcell.sel{box-shadow:inset 0 0 0 2px #217346;background:#f6fbf8}
-#vlookup-demo td.selE{box-shadow:inset 0 0 0 2px var(--p1);background:#f5f8ff}
-#vlookup-demo td.fcell.err{color:#d13438;font-weight:500}
+#fn-demo .grid-scroll{overflow-x:auto;padding:10px}
+#fn-demo .grid-box{position:relative;width:max-content;margin:0 auto}
+#fn-demo table.xlt,#fn-demo table.mini{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:12px}
+#fn-demo .xlt th,#fn-demo .xlt td,#fn-demo .mini th,#fn-demo .mini td{border-right:1px solid #e7e1d3;border-bottom:1px solid #e7e1d3;padding:5px 8px;height:16px;background:#fff;text-align:left;font-weight:400;color:#33302a;white-space:nowrap}
+#fn-demo .xlt td,#fn-demo .xlt th,#fn-demo .mini td,#fn-demo .mini th{transition:background-color .3s ease,color .3s ease,box-shadow .3s ease}
+#fn-demo .xlt .rh,#fn-demo .mini .rh{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-right:1px solid #ddd7c9}
+#fn-demo .xlt .ch,#fn-demo .mini .ch{background:#f1eee7;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #ddd7c9}
+#fn-demo .xlt .grp{background:#faf8f3;color:#6f6a5e;font-size:11px;text-align:center;border-bottom:1px solid #e0dacb}
+#fn-demo .xlt .gap{background:transparent !important;border-color:transparent}
+#fn-demo .xlt td.h,#fn-demo .mini td.h{font-weight:500;color:#45413a;background:#faf8f3}
+#fn-demo .mono{font-family:Consolas,'Courier New',monospace;font-size:11.5px}
+#fn-demo .cellbtn{background:none;border:none;font:inherit;color:inherit;padding:0;cursor:pointer}
+#fn-demo .cellbtn:hover{text-decoration:underline}
+#fn-demo td.fcell.sel{box-shadow:inset 0 0 0 2px #217346;background:#f6fbf8}
+#fn-demo td.selE{box-shadow:inset 0 0 0 2px var(--p1);background:#f5f8ff}
+#fn-demo td.fcell.err{color:#d13438;font-weight:500}
 
 /* 参数高亮 */
-#vlookup-demo .hl1{background:#e9f0fe !important;box-shadow:inset 0 0 0 2px var(--p1)}
-#vlookup-demo .hl2{background:#f2ebfd !important;box-shadow:inset 0 0 0 2px var(--p2)}
-#vlookup-demo .hl3{background:#fdf0da !important;box-shadow:inset 0 0 0 2px var(--p3)}
-#vlookup-demo .hl4{background:#e6f6ec !important;box-shadow:inset 0 0 0 2px var(--p4)}
+#fn-demo .hl1{background:#e9f0fe !important;box-shadow:inset 0 0 0 2px var(--p1)}
+#fn-demo .hl2{background:#f2ebfd !important;box-shadow:inset 0 0 0 2px var(--p2)}
+#fn-demo .hl3{background:#fdf0da !important;box-shadow:inset 0 0 0 2px var(--p3)}
+#fn-demo .hl4{background:#e6f6ec !important;box-shadow:inset 0 0 0 2px var(--p4)}
 
 /* 动画过程态（短促、只在事件瞬间出现，不喧宾夺主） */
-#vlookup-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
-#vlookup-demo .dimc{background:#f7f5ef !important;color:#b3ab9c}
-#vlookup-demo .xlt td.hitmark{background:#a9e4bd !important;box-shadow:inset 0 0 0 2px #2f9e5f;animation:vl-hitpop .38s ease}
-@keyframes vl-hitpop{0%,100%{box-shadow:inset 0 0 0 2px #2f9e5f}55%{box-shadow:inset 0 0 0 3px #188a4c}}
-#vlookup-demo tr.hit td{background:#e4f6ea}
-#vlookup-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
-#vlookup-demo .xlt td.okflash{animation:vl-okflash .8s cubic-bezier(.3,1.4,.5,1)}
-@keyframes vl-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:inset 0 0 0 0 rgba(30,158,87,0)}}
-#vlookup-demo .shake{animation:vl-shake .45s}
-@keyframes vl-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+#fn-demo .xlt td.cmp{background:#ffedc7 !important;box-shadow:inset 0 0 0 2px rgba(224,150,50,.85);transition:background-color .25s ease,box-shadow .25s ease}
+#fn-demo .dimc{background:#f7f5ef !important;color:#b3ab9c}
+#fn-demo .xlt td.hitmark{background:#a9e4bd !important;box-shadow:inset 0 0 0 2px #2f9e5f;animation:fd-hitpop .38s ease}
+@keyframes fd-hitpop{0%,100%{box-shadow:inset 0 0 0 2px #2f9e5f}55%{box-shadow:inset 0 0 0 3px #188a4c}}
+#fn-demo tr.hit td{background:#e4f6ea}
+#fn-demo .xlt td.pop{box-shadow:inset 0 0 0 3px #e8a33d,inset 0 0 0 5px rgba(217,122,6,.14);transition:box-shadow .18s ease}
+#fn-demo .xlt td.okflash{animation:fd-okflash .8s ease}
+@keyframes fd-okflash{0%{background:#7fd6a2;box-shadow:inset 0 0 0 3px #1e9e57}55%{background:#cdeedd;box-shadow:inset 0 0 0 2px #1e9e57}100%{background:#fff;box-shadow:inset 0 0 0 0 rgba(30,158,87,0)}}
+#fn-demo .shake{animation:fd-shake .45s}
+@keyframes fd-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 
 /* 覆盖层动画元素 */
-#vlookup-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
-#vlookup-demo .probe{position:absolute;width:16px;height:16px;border:2px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:vl-pulse-b 1.5s ease-in-out infinite}
-#vlookup-demo .probe.on{opacity:1}
-#vlookup-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c);animation-name:vl-pulse-g}
-#vlookup-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438);animation-name:vl-pulse-r}
-@keyframes vl-pulse-b{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
-@keyframes vl-pulse-g{0%,100%{box-shadow:0 0 0 4px rgba(24,138,76,.18),0 2px 8px rgba(24,138,76,.45)}50%{box-shadow:0 0 0 7px rgba(24,138,76,.10),0 2px 10px rgba(24,138,76,.55)}}
-@keyframes vl-pulse-r{0%,100%{box-shadow:0 0 0 4px rgba(209,52,56,.16),0 2px 8px rgba(209,52,56,.4)}50%{box-shadow:0 0 0 7px rgba(209,52,56,.08),0 2px 10px rgba(209,52,56,.5)}}
-#vlookup-demo .beam{position:absolute;height:3px;border-radius:2px;background:linear-gradient(90deg,#f2b25c,#d97a06);box-shadow:0 0 10px rgba(217,122,6,.7);transform:scaleX(0);transform-origin:left center;transition:transform .38s ease}
-#vlookup-demo .beam.on{transform:scaleX(1)}
-#vlookup-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
-#vlookup-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
-#vlookup-demo .cbadge{position:absolute;width:18px;height:18px;border-radius:50%;background:#b3620a;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) scale(0);transition:transform .22s ease}
-#vlookup-demo .cbadge.show{transform:translate(-50%,-50%) scale(1)}
+#fn-demo .ovl{position:absolute;inset:0;pointer-events:none;z-index:5}
+#fn-demo .probe{position:absolute;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7ea6ff,#2563eb);transform:translate(-50%,-50%);transition:left .3s cubic-bezier(.4,0,.2,1),top .3s cubic-bezier(.4,0,.2,1),opacity .25s ease;opacity:0;animation:fd-pulse-b 1.5s ease-in-out infinite}
+#fn-demo .probe.on{opacity:1}
+#fn-demo .probe.good{background:radial-gradient(circle at 35% 35%,#8fe6b3,#188a4c);animation-name:fd-pulse-g}
+#fn-demo .probe.bad{background:radial-gradient(circle at 35% 35%,#ff9d9d,#d13438);animation-name:fd-pulse-r}
+@keyframes fd-pulse-b{0%,100%{box-shadow:0 0 0 4px rgba(37,99,235,.16),0 2px 8px rgba(37,99,235,.4)}50%{box-shadow:0 0 0 7px rgba(37,99,235,.08),0 2px 10px rgba(37,99,235,.5)}}
+@keyframes fd-pulse-g{0%,100%{box-shadow:0 0 0 4px rgba(24,138,76,.18),0 2px 8px rgba(24,138,76,.45)}50%{box-shadow:0 0 0 7px rgba(24,138,76,.10),0 2px 10px rgba(24,138,76,.55)}}
+@keyframes fd-pulse-r{0%,100%{box-shadow:0 0 0 4px rgba(209,52,56,.16),0 2px 8px rgba(209,52,56,.4)}50%{box-shadow:0 0 0 7px rgba(209,52,56,.08),0 2px 10px rgba(209,52,56,.5)}}
+#fn-demo .beam{position:absolute;height:3px;border-radius:2px;background:linear-gradient(90deg,#f2b25c,#d97a06);box-shadow:0 0 10px rgba(217,122,6,.7);transform:scaleX(0);transform-origin:left center;transition:transform .38s ease}
+#fn-demo .beam.on{transform:scaleX(1)}
+#fn-demo .chipfly{position:absolute;background:#fff;border:2px solid var(--p3);color:#8a4b06;border-radius:6px;padding:3px 10px;font-family:Consolas,monospace;font-size:13px;box-shadow:0 4px 12px rgba(217,122,6,.3);transform:translate(-50%,-50%);opacity:0}
+#fn-demo .chipfly.on{opacity:1;transition:left .55s cubic-bezier(.5,.05,.35,1),top .55s cubic-bezier(.5,.05,.35,1)}
+#fn-demo .cbadge{position:absolute;width:18px;height:18px;border-radius:50%;background:#b3620a;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) scale(0);transition:transform .22s ease}
+#fn-demo .cbadge.show{transform:translate(-50%,-50%) scale(1)}
 
 /* 控制与图例 */
-#vlookup-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
-#vlookup-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
-#vlookup-demo .narr.err{background:#fdecec;border-color:#efc3c3}
-#vlookup-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
-#vlookup-demo .narr.ok .dot{background:var(--p4)}
-#vlookup-demo .narr.err .dot{background:#d13438}
-#vlookup-demo .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-#vlookup-demo .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid light-dark(#e2dccd,#3f3f46);border-radius:999px;background:light-dark(#ffffff,transparent);color:var(--foreground);font-size:12.5px}
-#vlookup-demo .chip:hover{border-color:var(--muted-foreground)}
-#vlookup-demo .chip .n{width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex:none}
+#fn-demo .narr{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:24px;padding:6px 12px;border-radius:9px;border:1px solid #e2dccd;background:#faf7f0}
+#fn-demo .narr.ok{background:#e9f6ee;border-color:#bfe3cd}
+#fn-demo .narr.err{background:#fdecec;border-color:#efc3c3}
+#fn-demo .narr .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+#fn-demo .narr.ok .dot{background:var(--p4)}
+#fn-demo .narr.err .dot{background:#d13438}
+#fn-demo .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#fn-demo .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid light-dark(#e2dccd,#3f3f46);border-radius:999px;background:light-dark(#ffffff,transparent);color:var(--foreground);font-size:12.5px}
+#fn-demo .chip:hover{border-color:var(--muted-foreground)}
+#fn-demo .chip .n{width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-weight:500;flex:none}
 
 /* ===== 为什么实验区 ===== */
-#vlookup-demo .why{margin-top:22px;border-top:1px dashed #d8d2c4;padding-top:6px}
-#vlookup-demo .why-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
-#vlookup-demo .why-head b{font-size:14.5px}
-#vlookup-demo .why-head .hint{font-size:12.5px;color:var(--muted-foreground)}
-#vlookup-demo .exp{margin-top:12px;padding:12px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9}
-#vlookup-demo .exp-t{font-size:13px;line-height:1.55;margin-bottom:10px}
-#vlookup-demo .exp-t b{color:#186a3e}
-#vlookup-demo .exp-t .note{color:var(--muted-foreground);font-size:12px}
-#vlookup-demo .exp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#vlookup-demo .colbox{display:inline-flex;align-items:center;gap:0;border:1px solid #d7d1c3;border-radius:6px;overflow:hidden}
-#vlookup-demo .colbox button{width:34px;height:30px;border:none;background:#fff;font-size:16px;cursor:pointer;color:#2b2723}
-#vlookup-demo .colbox b{min-width:36px;text-align:center;font-size:14px;border-left:1px solid #eee7da;border-right:1px solid #eee7da;padding:5px 0;font-family:Consolas,monospace}
-#vlookup-demo .mini-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
-#vlookup-demo .mini-box{position:relative;width:max-content}
-#vlookup-demo .mini td{min-width:64px}
-#vlookup-demo .mini-side{flex:1;min-width:220px}
-#vlookup-demo .mini-q{font-size:13px;margin-bottom:10px}
+#fn-demo .why{margin-top:22px;border-top:1px dashed #d8d2c4;padding-top:6px}
+#fn-demo .why-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+#fn-demo .why-head b{font-size:14.5px}
+#fn-demo .why-head .hint{font-size:12.5px;color:var(--muted-foreground)}
+#fn-demo .exp{margin-top:12px;padding:12px 14px;border:1px solid #e5dfd1;border-radius:10px;background:#fffdf9}
+#fn-demo .exp-t{font-size:13px;line-height:1.55;margin-bottom:10px}
+#fn-demo .exp-t b{color:#186a3e}
+#fn-demo .exp-t .note{color:var(--muted-foreground);font-size:12px}
+#fn-demo .exp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#fn-demo .colbox{display:inline-flex;align-items:center;gap:0;border:1px solid #d7d1c3;border-radius:6px;overflow:hidden}
+#fn-demo .colbox button{width:34px;height:30px;border:none;background:#fff;font-size:16px;cursor:pointer;color:#2b2723}
+#fn-demo .colbox b{min-width:36px;text-align:center;font-size:14px;border-left:1px solid #eee7da;border-right:1px solid #eee7da;padding:5px 0;font-family:Consolas,monospace}
+#fn-demo .mini-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+#fn-demo .mini-box{position:relative;width:max-content}
+#fn-demo .mini td{min-width:64px}
+#fn-demo .mini-side{flex:1;min-width:220px}
+#fn-demo .mini-q{font-size:13px;margin-bottom:10px}
 /* 口诀卡 */
-#vlookup-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
-#vlookup-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
-#vlookup-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
-#vlookup-demo .motto-l{font-size:14px;line-height:2}
-#vlookup-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
+#fn-demo .motto{margin-top:22px;border:1.5px dashed #c9c2b2;border-radius:12px;background:#fffdf8;padding:16px 18px;text-align:center}
+#fn-demo .motto-t{font-size:12px;letter-spacing:.35em;color:#9a958d;margin-bottom:10px}
+#fn-demo .motto-f{font-family:Consolas,'Courier New',monospace;font-size:15px;color:#186a3e;background:#f0f7f2;border:1px solid #cfe7d8;border-radius:8px;display:inline-block;padding:7px 16px;margin-bottom:12px}
+#fn-demo .motto-l{font-size:14px;line-height:2}
+#fn-demo .motto-tip{margin-top:12px;font-size:12.5px;color:var(--muted-foreground);line-height:1.7}
+/* prefers-reduced-motion：只关闭探针呼吸脉动等非必要连续装饰动画；
+   探针位移、比对/命中/结果写入反馈与全部教学步骤保留（SKILL 验证清单第 7 项） */
+@media (prefers-reduced-motion: reduce){
+  #fn-demo .probe{animation:none !important}
+  #fn-demo *{scroll-behavior:auto !important}
+}
 </style>
 
-<div class="topbar"><a class="backlink" href="../">← 返回目录</a><span class="uvnum" id="uv-count"></span></div>
+<div class="topbar"><a class="backlink" href="../">← 返回目录</a></div>
 <h3>VLOOKUP 是怎么工作的？</h3>
 <p class="sub text-small" style="margin-bottom:4px"><b>两张表对不上：这张有编码没售价，那张有编码有售价。</b>VLOOKUP 干的就是这个活——给它编码，它自己去另一张表把售价抄回来，省得你一行行肉眼对。</p>
 <p class="sub text-small">右边是出货单（只有商品编码），左边是价格表（有售价）——拿右边的编码，去左边查售价</p>
@@ -150,26 +154,27 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="xl-title"><span>出货单.xlsx</span><span class="save">已自动保存</span></div>
   <div class="xl-ribbon">开始　插入　公式　数据　审阅</div>
   <div class="fx">
-    <span class="name" id="vl-namebox">F2</span>
+    <span class="name" id="fd-namebox">F2</span>
     <span class="fxl">fx</span>
-    <div class="fl">=VLOOKUP(<span class="seg s1" id="vl-sg1" data-p="1" title="① 找谁：要查的值，出货单当前行的商品编码">E2</span><span>, </span><span class="seg s2" id="vl-sg2" data-p="2" title="② 在哪找：这片区域——第 1 列必须是查找值所在列，一般不圈表头">A2:C8</span><span>, </span><span class="seg s3" id="vl-sg3" data-p="3" title="③ 拿第几列：从区域第 1 列往右数，不是数整张表">3</span><span>, </span><span class="seg s4" data-p="4" title="④ 匹配方式：FALSE = 一模一样才算找到；TRUE = 近似匹配（阶梯区间用）">FALSE</span><span>)</span></div>
+    <div class="fl">=VLOOKUP(<span class="seg s1" id="fd-sg1" data-p="1" title="① 找谁：要查的值，出货单当前行的商品编码">E2</span><span>, </span><span class="seg s2" id="fd-sg2" data-p="2" title="② 在哪找：这片区域——第 1 列必须是查找值所在列，一般不圈表头">A2:C8</span><span>, </span><span class="seg s3" id="fd-sg3" data-p="3" title="③ 拿第几列：从区域第 1 列往右数，不是数整张表">3</span><span>, </span><span class="seg s4" data-p="4" title="④ 匹配方式：FALSE = 一模一样才算找到；TRUE = 近似匹配（阶梯区间用）">FALSE</span><span>)</span></div>
   </div>
   <div class="grid-scroll">
-    <div class="grid-box" id="vl-gbox">
-      <table class="xlt" id="vl-xlt"></table>
-      <div class="ovl" id="vl-ovl">
-        <div class="beam" id="vl-beam"></div>
-        <div class="probe" id="vl-probe"></div>
-        <div class="chipfly" id="vl-chipfly"></div>
+    <div class="grid-box" id="fd-gbox">
+      <table class="xlt" id="fd-xlt"></table>
+      <div class="ovl" id="fd-ovl">
+        <div class="beam" id="fd-beam"></div>
+        <div class="probe" id="fd-probe"></div>
+        <div class="chipfly" id="fd-chipfly"></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="viz-row" style="margin-top:12px">
-  <button id="vl-play" class="btn-p" type="button" title="从头重放当前查询">▶ 播放</button>
-  <button id="vl-step" class="btn-s" type="button" title="一行一行看它怎么比对">≫ 单步</button>
-  <span class="narr" aria-live="polite"><span class="dot"></span><span id="vl-narrtx">准备就绪——点「播放」，或点出货单任意一行换一个编码试试</span></span>
+  <button id="fd-play" class="btn-p" type="button" title="从头重放当前查询">▶ 播放</button>
+  <button id="fd-step" class="btn-s" type="button" title="一行一行看它怎么比对">≫ 单步</button>
+  <button id="fd-reset" class="btn-s" type="button">还原默认公式</button>
+  <span class="narr" aria-live="polite"><span class="dot"></span><span id="fd-narrtx">准备就绪——点「播放」，或点出货单任意一行换一个编码试试</span></span>
 </div>
 
 <div class="legend">
@@ -182,7 +187,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
 <div class="why">
   <div class="why-head">
     <div><b>为什么这么填？</b><span class="hint">　参数不用背——故意改错，看它翻车，why 自然就懂</span></div>
-    <button id="vl-reset" class="btn-s" type="button">还原默认公式</button>
+ton>
   </div>
 
   <div class="exp">
@@ -199,7 +204,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
     <div class="exp-t"><b>实验二 · ③ 的列号</b>　列号从「区域第 1 列」起数，和工作表原生的 C 列无关；超出区域宽度直接 #REF!。</div>
     <div class="exp-row">
       <span class="hint" style="font-size:12.5px;color:var(--muted-foreground)">③ =</span>
-      <span class="colbox"><button id="vl-colminus" type="button" title="减 1">−</button><b id="vl-colval">3</b><button id="vl-colplus" type="button" title="加 1">＋</button></span>
+      <span class="colbox"><button id="fd-colminus" type="button" title="减 1">−</button><b id="fd-colval">3</b><button id="fd-colplus" type="button" title="加 1">＋</button></span>
       <span class="hint" style="font-size:12.5px;color:var(--muted-foreground)">改成 2、1、4 各播一次，看取回的东西和报错</span>
     </div>
   </div>
@@ -207,7 +212,7 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="exp">
     <div class="exp-t"><b>实验三 · ④ FALSE 还是 TRUE？</b>　查编码、查名字这类要一字不差 → FALSE；查阶梯、区间（满减档、税率档、成绩档）→ TRUE，且首列必须升序。</div>
     <div class="mini-wrap">
-      <div class="mini-box" id="vl-mbox">
+      <div class="mini-box" id="fd-mbox">
         <table class="mini"><tbody>
           <tr><th class="rh"></th><th class="ch">订单满额(元)</th><th class="ch">折扣</th></tr>
           <tr><th class="rh">2</th><td class="m-amt tabular-nums" data-m="2">0</td><td class="m-dis" data-md="2">9.8折</td></tr>
@@ -215,13 +220,13 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
           <tr><th class="rh">4</th><td class="m-amt tabular-nums" data-m="4">500</td><td class="m-dis" data-md="4">9.0折</td></tr>
           <tr><th class="rh">5</th><td class="m-amt tabular-nums" data-m="5">1000</td><td class="m-dis" data-md="5">8.5折</td></tr>
         </tbody></table>
-        <div class="ovl" id="vl-movl"><div class="probe" id="vl-mprobe"></div></div>
+        <div class="ovl" id="fd-movl"><div class="probe" id="fd-mprobe"></div></div>
       </div>
       <div class="mini-side">
         <div class="mini-q">一笔 <b>680 元</b>的订单该套哪档折扣？先猜猜两种参数各会发生什么，再分别点：</div>
-        <button class="btn-s" id="vl-mfalse" type="button">用 FALSE 查</button>
-        <button class="btn-s" id="vl-mtrue" type="button">用 TRUE 查</button>
-        <div class="narr" style="margin-top:10px" aria-live="polite"><span class="dot"></span><span id="vl-mnarr">680 不在表里——两种参数的命运完全不同</span></div>
+        <button class="btn-s" id="fd-mfalse" type="button">用 FALSE 查</button>
+        <button class="btn-s" id="fd-mtrue" type="button">用 TRUE 查</button>
+        <div class="narr" style="margin-top:10px" aria-live="polite"><span class="dot"></span><span id="fd-mnarr">680 不在表里——两种参数的命运完全不同</span></div>
       </div>
     </div>
   </div>
@@ -234,12 +239,12 @@ body{margin:0;background:#faf8f4;font-family:system-ui,-apple-system,'Segoe UI',
   <div class="motto-tip">进阶：下拉填充前把区域锁成 $A$2:$C$8，不然区域跟着跑；不想见 #N/A 就包一层 IFERROR(…,"无货")；反向查找是 VLOOKUP 的死穴，交给 INDEX+MATCH 或 XLOOKUP。</div>
 </div>
 
-<p class="sr-only">交互演示：VLOOKUP 以出货单的商品编码为查找值，在价格表首列自上而下逐行比对，命中后返回区域第 3 列的售价；查不到返回 #N/A。下方三个实验分别演示区域起点、列号、匹配方式的选取原理。</p>
+<p class="sr-only" id="fd-summary">交互演示：VLOOKUP 以出货单的商品编码为查找值，在价格表首列自上而下逐行比对，命中后返回区域第 3 列的售价；查不到返回 #N/A。下方三个实验分别演示区域起点、列号、匹配方式的选取原理。</p>
 </div>
 
 <script>
 (function(){
-const R=document.getElementById('vlookup-demo');
+const R=document.getElementById('fn-demo');
 const PRICE=[["SKU-1001","保温杯 500ml",39.9],["SKU-1002","帆布袋",19.9],["SKU-1003","户外折叠椅",89],["SKU-1004","速干毛巾",15.5],["SKU-1005","登山扣",9.9],["SKU-1006","防水手机袋",25],["SKU-1007","野餐垫 200×150",69]];
 const ORDERS=["SKU-1003","SKU-1001","SKU-9999","SKU-1007"]; // 行 2~5
 const fmt=p=>p.toFixed(1);
@@ -262,14 +267,14 @@ for(let r=2;r<=8;r++){
   h+='</tr>';
 }
 h+='</tbody>';
-R.querySelector('#vl-xlt').innerHTML=h;
+R.querySelector('#fd-xlt').innerHTML=h;
 
 const cel={};R.querySelectorAll('[data-a]').forEach(el=>{cel[el.dataset.a]=el});
-const gbox=R.querySelector('#vl-gbox'),ovl=R.querySelector('#vl-ovl'),probe=R.querySelector('#vl-probe'),beam=R.querySelector('#vl-beam'),chipfly=R.querySelector('#vl-chipfly');
-const namebox=R.querySelector('#vl-namebox'),sg1=R.querySelector('#vl-sg1'),sg2=R.querySelector('#vl-sg2'),sg3=R.querySelector('#vl-sg3');
-const narrEl=R.querySelector('#vl-narrtx'),narrWrap=narrEl.parentElement;
-const playBtn=R.querySelector('#vl-play'),stepBtn=R.querySelector('#vl-step');
-const colval=R.querySelector('#vl-colval');
+const gbox=R.querySelector('#fd-gbox'),ovl=R.querySelector('#fd-ovl'),probe=R.querySelector('#fd-probe'),beam=R.querySelector('#fd-beam'),chipfly=R.querySelector('#fd-chipfly');
+const namebox=R.querySelector('#fd-namebox'),sg1=R.querySelector('#fd-sg1'),sg2=R.querySelector('#fd-sg2'),sg3=R.querySelector('#fd-sg3');
+const narrEl=R.querySelector('#fd-narrtx'),narrWrap=narrEl.parentElement;
+const playBtn=R.querySelector('#fd-play'),stepBtn=R.querySelector('#fd-step');
+const colval=R.querySelector('#fd-colval');
 
 /* ---- 公式参数状态（实验一/二共改这三个量） ---- */
 let rangeStart='A',rangeTop=2,colIdx=3;
@@ -416,16 +421,16 @@ R.querySelectorAll('.exp-btn[data-rs]').forEach(btn=>{
     refreshParams();
   });
 });
-R.querySelector('#vl-colminus').addEventListener('click',()=>{if(colIdx>1){colIdx--;refreshParams()}});
-R.querySelector('#vl-colplus').addEventListener('click',()=>{if(colIdx<4){colIdx++;refreshParams()}});
-R.querySelector('#vl-reset').addEventListener('click',()=>{
+R.querySelector('#fd-colminus').addEventListener('click',()=>{if(colIdx>1){colIdx--;refreshParams()}});
+R.querySelector('#fd-colplus').addEventListener('click',()=>{if(colIdx<4){colIdx++;refreshParams()}});
+R.querySelector('#fd-reset').addEventListener('click',()=>{
   rangeStart='A';rangeTop=2;colIdx=3;
   R.querySelectorAll('.exp-btn[data-rs]').forEach(b=>{const on=b.dataset.rs==='A'&&b.dataset.rt==='2';b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false')});
   refreshParams();narr('已还原为 =VLOOKUP(E'+activeRow+', A2:C8, 3, FALSE)');
 });
 
 /* ---- 实验三：FALSE vs TRUE（阶梯折扣表） ---- */
-const mbox=R.querySelector('#vl-mbox'),mprobe=R.querySelector('#vl-mprobe'),mnarrEl=R.querySelector('#vl-mnarr'),mnarrWrap=mnarrEl.parentElement;
+const mbox=R.querySelector('#fd-mbox'),mprobe=R.querySelector('#fd-mprobe'),mnarrEl=R.querySelector('#fd-mnarr'),mnarrWrap=mnarrEl.parentElement;
 let mtoken=0;
 const msleep=(ms,my)=>new Promise((res,rej)=>setTimeout(()=>{my!==undefined&&my!==mtoken?rej(0):res()},ms));
 function mnarr(tx,mode){mnarrEl.textContent=tx;mnarrWrap.classList.remove('ok','err');if(mode)mnarrWrap.classList.add(mode)}
@@ -433,7 +438,7 @@ function mClear(){mbox.querySelectorAll('.cmp,.hitmark,.pop').forEach(el=>el.cla
 function mCell(attr,r){return mbox.querySelector('['+attr+'="'+r+'"]')}
 async function mStep(r,my){mStepProbe(r);mCell('data-m',r).classList.add('cmp');await msleep(500,my);mCell('data-m',r).classList.remove('cmp')}
 function mStepProbe(r){const p=pos(mCell('data-m',r),mbox);mprobe.style.left=p.cx+'px';mprobe.style.top=p.cy+'px';mprobe.classList.add('on')}
-R.querySelector('#vl-mfalse').addEventListener('click',async()=>{
+R.querySelector('#fd-mfalse').addEventListener('click',async()=>{
   const my=++mtoken;mClear();
   try{
     mnarr('FALSE（精确）：逐行找「等于 680」的…');
@@ -442,7 +447,7 @@ R.querySelector('#vl-mfalse').addEventListener('click',async()=>{
     await msleep(700,my);mbox.classList.remove('shake');mprobe.classList.remove('on');
   }catch(e){if(e!==0)console.error(e)}
 });
-R.querySelector('#vl-mtrue').addEventListener('click',async()=>{
+R.querySelector('#fd-mtrue').addEventListener('click',async()=>{
   const my=++mtoken;mClear();
   try{
     mnarr('TRUE（近似）：找「≤680 的最大一档」…');
@@ -463,22 +468,6 @@ syncFormula();
 prefill();
 setActive(2,false);
 const t0=token;setTimeout(()=>{if(token===t0)resetAndRun()},500)
-})();
-</script>
-<script>
-/* UV 独立访客统计：复用 duzibb 博客 duzibb-uv 云函数（PG 去重），vid 存本地 */
-(function(){
-  var el=document.getElementById('uv-count');
-  var API='https://benyi-d4g70if3cf23c8569.service.tcloudbase.com/duzibb-uv';
-  var PAGE_ID='tutorials/vlookup';
-  try{
-    var v=localStorage.getItem('h2e_vid');
-    if(!v){v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);localStorage.setItem('h2e_vid',v)}
-    fetch(API+'?slug='+encodeURIComponent(PAGE_ID)+'&vid='+encodeURIComponent(v),{method:'POST'})
-      .then(function(r){return r.json()})
-      .then(function(d){if(el&&typeof d.uv==='number'){el.textContent=d.uv+' 人玩过'}})
-      .catch(function(){});
-  }catch(e){}
 })();
 </script>
 </body>
